@@ -10,9 +10,8 @@ import Dish from '../components/Dish'
 import dishesApi from '../api/dishes'
 
 function Home() {
-    const [dishes, setDishes] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [startIndex, setStartIndex] = useState(0);
+    const [loading, setLoading] = useState(true)   // Trạng thái lấy dữ liệu
+    const [categories, setCategories] = useState({})    // Danh mục và các món ăn trong đó
 
     // Lấy dữ liệu 
     useEffect(() => {
@@ -22,11 +21,22 @@ function Home() {
                 const response = await dishesApi.getAllDishes()
 
                 if (response) {
-                    setDishes(response.items || [])
+                    const dishesData = response.items || []  
+                    
+                    // Nhóm món ăn theo danh mục
+                    const dishCatagories = dishesData.reduce((acc, dish) => {   // Danh sách gồm danh mục và các món ăn của nó
+                        const catagoryName = dish.groupName[0]   // Thuộc tính dùng để chia nhóm (groupName[0])
+                        if (!acc[catagoryName]) {
+                            acc[catagoryName] = []
+                        }
+                        acc[catagoryName].push(dish)
+                        return acc
+                    }, {})
 
+                    setCategories(dishCatagories)
                 }
             } catch (error) {
-                console.log("Loi khi lay du lieu:", error)
+                console.log("Lỗi khi lấy dữ liệu:", error)
             } finally {
                 setLoading(false)
             }
@@ -34,18 +44,6 @@ function Home() {
         fetchDishes()
     }, [])
 
-    // Điều khiển mũi tên trái
-    const handlePrev = () => {
-        setStartIndex((prevIndex) => Math.max(prevIndex - 4, 0));
-    };
-
-    // Điều khiển mũi tên phải
-    const handleNext = () => {
-        setStartIndex((prevIndex) => Math.min(prevIndex + 4, dishes.length - 4));
-    };
-
-    // Chỉ hiển thị 4 món ăn mỗi lần
-    const visibleDishes = dishes.slice(startIndex, startIndex + 4);
 
     return (
         <>
@@ -58,20 +56,61 @@ function Home() {
                         <Spinner animation="border" variant="secondary"/>
                     </div>
                 ) : (
-                    <div className="d-flex justify-content-between align-items-start my-5 px-5">
-                        <button type='button' className='btn d-flex align-self-center rounded-circle' onClick={handlePrev}>
-                            <img src={Left} alt="Left Arrow" height='20'/>
-                        </button>
-                        <Dish data={visibleDishes}/>
-                        <button type='button' className='btn d-flex align-self-center rounded-circle' onClick={handleNext}>
-                            <img src={Right} alt="Right Arrow" height='20'/>
-                        </button>
-                    </div>
+                    Object.keys(categories).map((group, index) => (
+                        <ProductCarousel
+                            key={index}
+                            group={group}
+                            dishes={categories[group]}
+                        />
+                    ))
                 )}
             </Container>
 
             <Footer />
         </>
+    )
+}
+
+// Hàm hiển thị sản phẩm theo băng chuyền
+function ProductCarousel({ group, dishes }) {
+    const [startIndex, setStartIndex] = useState(0)
+
+    const handlePrev = () => {
+        setStartIndex((prevIndex) =>
+            prevIndex === 0 ? Math.max(dishes.length - 4, 0) : Math.max(prevIndex - 4, 0)
+        )
+    }
+
+    const handleNext = () => {
+        setStartIndex((prevIndex) =>
+            prevIndex + 4 >= dishes.length ? 0 : Math.min(prevIndex + 4, dishes.length - 4)
+        )
+    }
+
+    // Hiển thị 4 sản phẩm 1 lượt 
+    const visibleDishes = dishes.slice(startIndex, startIndex + 4)
+
+    return (
+        <div className="my-5">
+            <h1 className="text-center pb-4">{group}</h1>
+            <div className="d-flex justify-content-between align-items-start px-5">
+                <button
+                    type="button"
+                    className="btn d-flex align-self-center rounded-pill"
+                    onClick={handlePrev}
+                >
+                    <img src={Left} alt="Left Arrow" height="20" />
+                </button>
+                <Dish data={visibleDishes} />
+                <button
+                    type="button"
+                    className="btn d-flex align-self-center rounded-pill"
+                    onClick={handleNext}
+                >
+                    <img src={Right} alt="Right Arrow" height="20" />
+                </button>
+            </div>
+        </div>
     )
 }
 
