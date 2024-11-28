@@ -7,6 +7,7 @@ import Blog from './pages/Blog'
 import DishDetail from './pages/DishDetail'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Checkout from './pages/Checkout'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path='/blog' element={<Blog />}/>
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
+        <Route path='/checkout' element={<Checkout />} />
       </Routes>
 
     </>

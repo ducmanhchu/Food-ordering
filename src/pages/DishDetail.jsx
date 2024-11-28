@@ -1,12 +1,13 @@
 import { Breadcrumb, Container, Col, Row } from 'react-bootstrap'
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import dishesApi from "../api/dishes"
 import Star from '../components/Star'
 import Currency from '../components/Currency'
+import '../components/Custom.css'
 
 function DishDetail() {
     const {id} = useParams()
@@ -46,19 +47,30 @@ function DishDetail() {
 
             <Container>
                 <Breadcrumb className='my-3'>
-                    <a href="/" className='text-decoration-none text-secondary me-2'>Trang chủ</a>
+                    <Link to='/' className='text-decoration-none'>
+                        <a className='text-decoration-none text-secondary me-2'>Trang chủ</a>
+                    </Link>
+                    <p className='text-secondary me-2'>&gt;</p>
+                    <Breadcrumb.Item active className='me-2'>
+                        {dish ? dish.groupName[0] : "Đang tải..."}
+                    </Breadcrumb.Item>
                     <p className='text-secondary me-2'>&gt;</p>
                     <Breadcrumb.Item active>
-                        {dish ? dish.groupName[0] : "Đang tải..."}
-                    </Breadcrumb.Item> 
+                        {dish ? dish.flavorName : "Đang tải..."}
+                    </Breadcrumb.Item>
                 </Breadcrumb>
 
                 <Row className='border-bottom pb-3 mb-4'>
                     <Col>
-                        <img src={dish ? dish.imageUrl : 'https://placehold.co/320x200?text=Loading...'} alt="Ảnh sản phẩm" style={{width:'100%'}}/>
+                        <img 
+                            src={dish ? dish.imageUrl : 'https://placehold.co/320x200?text=Loading...'} 
+                            alt="Ảnh sản phẩm"
+                            className='object-fit-cover' 
+                            style={{width:'100%', height: '450px'}}
+                        />
                     </Col>
                     <Col className='ps-2'>
-                        <p className='fs-1 fw-medium mb-2'>{dish ? dish.groupName[0] : "Đang tải..."}</p>
+                        <p className='fs-1 fw-medium mb-2'>{dish ? dish.flavorName : "Đang tải..."}</p>
                         <Star st={5}/>
                         <span className='ms-2 text-secondary'>5/5</span>
                         <p className='my-1'><Currency amount={50000} fontSize={32}/></p>
@@ -70,8 +82,8 @@ function DishDetail() {
                                 <button type='button' className='btn fw-bold border border-0' onClick={handleIncrease}>+</button>
                             </span>
                             <button
-                                type="button" className="btn rounded-pill ms-3 text-white px-5 pb-2"
-                                style={{backgroundColor: '#000066'}}
+                                type="button" className="btn rounded-pill ms-3 px-5 pb-2 buttonHover"
+                                
                             >
                                 Thêm vào giỏ hàng
                             </button>

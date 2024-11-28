@@ -2,6 +2,7 @@ import { Form, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 
 import Logo from '../assets/Logo.svg'
+import '../components/Custom.css'
 
 function Login() {
     return (
@@ -30,7 +31,7 @@ function Login() {
                                 placeholder='Nhập mật khẩu'
                                 className='mb-4'
                             />
-                            <Button className='text-white rounded-pill' style={{width: '100%', backgroundColor: '#000066'}}>
+                            <Button className='buttonHover rounded-pill' style={{width: '100%'}}>
                                 Đăng nhập
                             </Button>
                             <p className='text-secondary text-center mt-4'>
