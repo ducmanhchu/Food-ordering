@@ -73,8 +73,8 @@ function Header() {
                     </Navbar.Brand>
 
                     {/* Tìm kiếm */}
-                    <Form className='position-relative'>
-                        <InputGroup className='rounded-pill bg-body-secondary px-3' style={{ cursor: 'pointer', width: '500px', height: '4030' }} >
+                    <Form className='position-relative' onSubmit={(e) => e.preventDefault()}>
+                        <InputGroup className='rounded-pill bg-body-secondary px-3' style={{ width: '500px', height: '4030' }} >
                             <Form.Control
                                 type="text"
                                 placeholder="Tìm kiếm sản phẩm..."
