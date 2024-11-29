@@ -1,8 +1,8 @@
-import { Form, Button } from 'react-bootstrap'
+import { Form, Button, Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
-
 import Logo from '../assets/Logo.svg'
 import '../components/Custom.css'
+
 
 function Register() {
     return (
@@ -12,10 +12,15 @@ function Register() {
                     <img src={Logo} alt="TLU Food Logo" height="30" style={{ cursor: 'pointer' }}/>
                 </Link>
             </div>
-            <div className="container">
-                <div className="row">
-                    <div className="col-6 offset-md-3">
-                        <div style={{marginTop: '100px'}}>
+            <Container>
+            <div className="bg-white mt-5 rounded" style={{width:"100%",height:"50%"}}>
+                <div className="row p-3">
+                <div className='col-md-5'>
+                    <img src='favicon.png' style={{width:"20%"}}></img>
+                        <img src='login.jpg' style={{width:"85%"}}></img>
+                    </div>
+                    <div className="col-md-7">
+                        <div className='p-5' style={{width:"85%",marginTop:"75px"}}>
                             <p className="fs-3 fw-bold">Tạo tài khoản</p>
                             <Form.Label htmlFor="emailUser">Tên tài khoản</Form.Label>
                             <Form.Control
@@ -51,6 +56,7 @@ function Register() {
                     </div>
                 </div>
             </div>
+            </Container>
         </>
     )
 }
