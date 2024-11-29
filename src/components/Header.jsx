@@ -134,6 +134,11 @@ function Header() {
                                     </Link>
                                 </Dropdown.Item>
                                 <Dropdown.Item>
+                                    <Link to='/orders' className='text-decoration-none text-black'>
+                                        Đơn hàng của tôi
+                                    </Link>
+                                </Dropdown.Item>
+                                <Dropdown.Item>
                                     <Link to='/login' className='text-decoration-none text-black'>
                                         Đăng nhập
                                     </Link>

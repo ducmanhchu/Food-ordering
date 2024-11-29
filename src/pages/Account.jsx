@@ -29,10 +29,10 @@ function Account() {
             </ol>
             </nav>
             </Navbar>
-            <div className="bg-white p-3 rounded ">
+            <div className="bg-white p-3 rounded just-content-center" style={{marginTop:"50px",marginBottom:"90px"}}>
                 <h2 className="mb-3">Thông tin của bạn</h2>
-                <div className="d-flex">
-                <div className="col-md-4 text-center">
+                <div className="row">
+                <div className="col-md-4 text-center ">
               <div className="mb-3">
                 <div
                   className="rounded-circle overflow-hidden"
@@ -61,7 +61,7 @@ function Account() {
                 Upload a picture
               </label>
             </div>
-                <div className="col-md-8" >
+                <div className="col-md-8 " >
                     <label for="exampleFormControlInput1" class="form-label fw-bold">Tên tài khoản</label>
                     <input 
                     type="text" 
