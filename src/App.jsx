@@ -8,6 +8,9 @@ import DishDetail from './pages/DishDetail'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Checkout from './pages/Checkout'
+import Post from './pages/Post'
+import Account from './pages/Account'
+
 
 function App() {
   return (
@@ -17,6 +20,8 @@ function App() {
         <Route path='/' element={<Home />}/>
         <Route path='/dish/:id' element={<DishDetail />}/>
         <Route path='/blog' element={<Blog />}/>
+        <Route path='/acc' element={<Account />}/>
+        <Route path='/post' element={<Post />} />
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
         <Route path='/checkout' element={<Checkout />} />
