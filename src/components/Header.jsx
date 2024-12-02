@@ -129,7 +129,7 @@ function Header() {
 
                             <Dropdown.Menu>
                                 <Dropdown.Item>
-                                    <Link to='/acc' className='text-decoration-none text-black'>
+                                    <Link to='/account' className='text-decoration-none text-black'>
                                         Tài khoản
                                     </Link>
                                 </Dropdown.Item>
