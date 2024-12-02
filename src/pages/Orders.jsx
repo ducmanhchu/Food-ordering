@@ -42,7 +42,18 @@ function Orders() {
                             <p className="fw-bold">Thành tiền: <span class="fw-bold" style={{color:"#000066"}} >110.000đ</span></p>
                         </div>
                         <div className="text-end mt-3">
-                            <button class="btn btn-danger btn-sm">Hủy đơn</button>
+                            <button class="btn btn-danger" style={{marginRight:"5px"}}>Hủy đơn</button>
+                            <Link
+                                to="/orderdetail"
+                                className="btn"
+                                style={{
+                                    backgroundColor: "#000066",
+                                    color: "#fff",
+                                    textDecoration: "none",
+                                }}
+                            >
+                                Chi tiết
+                            </Link>
                         </div>
                     </div>
                 </div>

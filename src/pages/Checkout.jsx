@@ -57,6 +57,26 @@ function Checkout() {
                             <div className="px-3 pb-3 border-bottom">
                                 <p className="fs-5 fw-medium">Chi tiết đơn hàng</p>
                             </div>
+                            <div className="row px-3 py-3">
+                                <div className="col-md-10">
+                                    <img src="anh1.jpg" style={{width:"50px"}}></img><span> x1</span><span> Cơm tấm Sài Gòn</span>
+                                </div>
+                                <div className="col-md-2">
+                                    <p>50.000</p>
+                                </div>
+                            </div>
+                            <div className="row mb-3 px-3 py-3">
+                                <div className="col-md-10">
+                                    <img src="anh2.jpg" style={{width:"50px"}}></img><span> x1</span><span> Nem nướng Nha Trang</span>
+                                </div>
+                                <div className="col-md-2">
+                                    <p>50.000</p>
+                                </div>
+                            </div>
+                            <div class=" px-3 py-3">
+                                <label for="exampleFormControlTextarea1" class="form-label">Ghi chú cho người bán</label>
+                                <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                            </div>
                             {/* Phương thức và khuyến mãi */}
                             <div className="px-3 py-3 border-bottom">
                                 <p className="fs-5 fw-medium">Phương thức và khuyến mãi</p>
