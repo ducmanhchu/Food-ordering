@@ -11,7 +11,7 @@ import Checkout from './pages/Checkout'
 import Post from './pages/Post'
 import Account from './pages/Account'
 import Orders from './pages/Orders'
-
+import OrderDetail from './pages/OrderDetail'
 
 function App() {
   return (
@@ -27,6 +27,8 @@ function App() {
         <Route path='/register' element={<Register />} />
         <Route path='/checkout' element={<Checkout />} />
         <Route path='/orders' element={<Orders />} />
+        <Route path='/orderdetail' element={<OrderDetail />} />
+
 
       </Routes>
 
