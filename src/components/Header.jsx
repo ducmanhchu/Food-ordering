@@ -1,6 +1,6 @@
-import { Navbar, Container, Form, InputGroup, Offcanvas, Dropdown, Button, Alert, ListGroup } from 'react-bootstrap'
+import { Navbar, Container, Form, InputGroup, Offcanvas, Dropdown, Button, Toast, ToastContainer, ListGroup } from 'react-bootstrap'
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import Logo from '../assets/Logo.svg'
 import SearchLogo from '../assets/Search.svg'
@@ -17,16 +17,33 @@ function Header() {
     // Ngăn người dùng sử dụng các nút điều hướng trên Header khi đang ở trang thanh toán 
     const location = useLocation()
     const isCheckout = location.pathname === '/checkout'
-    const [showAlert, setShowAlert] = useState(false)
+    const [show, setShow] = useState(false)
     const [dishes, setDishes] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [filteredDishes, setFilteredDishes] = useState([])
     const [quantity, setQuantity] = useState(1)
+    // Xử lý khi đã đăng nhập
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const userName = sessionStorage.getItem('username')
+    const navigate = useNavigate()
 
-    const handleClose = () => setShowOffcanvas(false);
+    // Kiểm tra trạng thái đăng nhập
+    useEffect(() => {
+        const accessToken = sessionStorage.getItem("access_token")
+        setIsLoggedIn(!!accessToken) // Chuyển đổi thành boolean
+    }, [])
+
+    // Xử lý đăng xuất
+    const handleLogout = () => {
+        sessionStorage.clear() // Xóa tất cả thông tin trong sessionStorage
+        setIsLoggedIn(false) // Cập nhật trạng thái
+        navigate('/')
+    }
+
+    const handleClose = () => setShowOffcanvas(false)
     const handleShow = () => {
         if (isCheckout) {
-            setShowAlert(true)
+            setShow(true)
         } else {
             setShowOffcanvas(true);
         }
@@ -144,21 +161,29 @@ function Header() {
                             </Dropdown.Toggle>
 
                             <Dropdown.Menu>
-                                <Dropdown.Item>
-                                    <Link to='/account' className='text-decoration-none text-black'>
-                                        Tài khoản
-                                    </Link>
-                                </Dropdown.Item>
-                                <Dropdown.Item>
-                                    <Link to='/orders' className='text-decoration-none text-black'>
-                                        Đơn hàng của tôi
-                                    </Link>
-                                </Dropdown.Item>
-                                <Dropdown.Item>
-                                    <Link to='/login' className='text-decoration-none text-black'>
-                                        Đăng nhập
-                                    </Link>
-                                </Dropdown.Item>
+                                {isLoggedIn ? (
+                                    <>
+                                        <Dropdown.Item>
+                                            <Link to="/account" className="text-decoration-none text-black">
+                                                {userName}
+                                            </Link>
+                                        </Dropdown.Item>
+                                        <Dropdown.Item>
+                                            <Link to="/orders" className="text-decoration-none text-black">
+                                                Đơn hàng của tôi
+                                            </Link>
+                                        </Dropdown.Item>
+                                        <Dropdown.Item onClick={handleLogout} className="text-decoration-none text-black">
+                                            Đăng xuất
+                                        </Dropdown.Item>
+                                    </>
+                                    ) : (
+                                        <Dropdown.Item>
+                                            <Link to="/login" className="text-decoration-none text-black">
+                                                Đăng nhập
+                                            </Link>
+                                        </Dropdown.Item>
+                                )}
                             </Dropdown.Menu>
                         </Dropdown>
                     </div>
@@ -200,19 +225,11 @@ function Header() {
                 </div>
             </Offcanvas>
 
-            {/* Hiển thị thông báo khi người dùng nhấn vào giỏ hàng khi đang ở trang thanh toán  */}
-            {showAlert && (
-                <div className="container d-flex justify-content-center">
-                    <Alert
-                        variant="warning"
-                        onClose={() => setShowAlert(false)}
-                        dismissible
-                        className="mt-3 w-50"
-                    >
-                        Hãy hoàn thành việc thanh toán!
-                    </Alert>
-                </div>
-            )}
+            <ToastContainer className="mt-3" position="top-center">
+                <Toast className="bg-warning-subtle text-center" onClose={() => setShow(false)} delay={3000} show={show} autohide>
+                    <Toast.Body>Hãy hoàn thành việc thanh toán!</Toast.Body>
+                </Toast>    
+            </ToastContainer>
         </>
     )
 }

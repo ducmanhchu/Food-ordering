@@ -1,10 +1,42 @@
-import { Form, Button, Container } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { Form, Button, Container, Toast, ToastContainer } from 'react-bootstrap'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+
 import Logo from '../assets/Logo.svg'
 import '../components/Custom.css'
+import userApi from '../api/user'
 
 
 function Register() {
+    const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
+    const navigate = useNavigate()
+    const [show, setShow] = useState(false)
+
+    const handleRegister = async(e) => {
+        e.preventDefault()
+        try {
+            const response = await userApi.register(username, email, password) || []
+
+            if (response && response.message) {
+                setShow(true)
+                setTimeout(() => {
+                    navigate('/login')
+                }, 1000) 
+            } else throw new Error("Đăng ký thất bại!")
+        } catch(error) {
+            console.error('Đăng ký không thành công:', error)
+
+            if (error.response) {
+                setError(error.response.data.detail || 'Đăng ký không thành công!')
+            } else {
+                setError('Có lỗi xảy ra, hãy kiểm tra lại!')
+            }
+        }
+    }
+
     return (
         <>
             <div className="d-flex justify-content-center py-3 border-bottom bg-white">
@@ -21,30 +53,42 @@ function Register() {
                     <div className="col-md-7">
                         <div className='p-5' style={{width:"85%",marginTop:"75px"}}>
                             <p className="fs-3 fw-bold">Tạo tài khoản</p>
-                            <Form.Label htmlFor="emailUser">Tên tài khoản</Form.Label>
-                            <Form.Control
-                                type="email"
-                                id="emailUser"
-                                placeholder='Nhập tên tài khoản'
-                                className='mb-2'
-                            />
-                            <Form.Label htmlFor="emailUser2">Email</Form.Label>
-                            <Form.Control
-                                type="email"
-                                id="emailUser2"
-                                placeholder='Nhập email'
-                                className='mb-2'
-                            />
-                            <Form.Label htmlFor="passwordlUser">Mật khẩu</Form.Label>
-                            <Form.Control
-                                type="password"
-                                id="passwordUser"
-                                placeholder='Nhập mật khẩu'
-                                className='mb-4'
-                            />
-                            <Button className='buttonHover rounded-pill' style={{width: '100%'}}>
-                                Tạo tài khoản
-                            </Button>
+                            <Form onSubmit={handleRegister}>
+                                <Form.Label htmlFor="nameUser">Tên tài khoản</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    id="nameUser"
+                                    placeholder='Nhập tên tài khoản'
+                                    className='mb-2'
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                />
+                                <Form.Label htmlFor="emailUser">Email</Form.Label>
+                                <Form.Control
+                                    type="email"
+                                    id="emailUser"
+                                    placeholder='Nhập email'
+                                    className='mb-2'
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                                <Form.Label htmlFor="passwordlUser">Mật khẩu</Form.Label>
+                                <Form.Control
+                                    type="password"
+                                    id="passwordUser"
+                                    placeholder='Nhập mật khẩu'
+                                    className='mb-2'
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                                {error && <p className="text-danger mb-3 ">{error}</p>}
+                                <Button className='buttonHover rounded-pill' style={{width: '100%'}} type='submit'>
+                                    Tạo tài khoản
+                                </Button>
+                            </Form>
                             <p className='text-secondary text-center mt-4'>
                                 Đã có tài khoản?
                                 <Link to='/login'>
@@ -56,6 +100,11 @@ function Register() {
                 </div>
             </div>
             </Container>
+            <ToastContainer className="mt-3" position="top-center">
+                <Toast className="bg-success text-white text-center" onClose={() => setShow(false)} delay={800} show={show} autohide>
+                    <Toast.Body>Đăng ký thành công!</Toast.Body>
+                </Toast>    
+            </ToastContainer>
         </>
     )
 }
