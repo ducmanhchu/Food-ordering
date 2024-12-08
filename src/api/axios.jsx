@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosClient = axios.create({
-    baseURL: 'https://jellybellywikiapi.onrender.com/api', // API Test
+    baseURL: 'http://localhost:8000/tlu',
     headers: {
         'Content-Type': 'application/json',
     },

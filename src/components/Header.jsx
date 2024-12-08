@@ -19,8 +19,9 @@ function Header() {
     const isCheckout = location.pathname === '/checkout'
     const [showAlert, setShowAlert] = useState(false)
     const [dishes, setDishes] = useState([])
-    const [searchQuery, setSearchQuery] = useState('');
-    const [filteredDishes, setFilteredDishes] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('')
+    const [filteredDishes, setFilteredDishes] = useState([])
+    const [quantity, setQuantity] = useState(1)
 
     const handleClose = () => setShowOffcanvas(false);
     const handleShow = () => {
@@ -36,7 +37,7 @@ function Header() {
         const fetchDishes = async() => {
             try {
                 const response = await dishesApi.getAllDishes()
-                setDishes(response.items || [])
+                setDishes(response || [])
             } catch (error) {
                 console.log('Lỗi lấy dữ liệu tìm kiếm: ', error)
             }
@@ -51,7 +52,7 @@ function Header() {
             setFilteredDishes([])
         } else {
             const filtered = dishes.filter(dish => {
-                return dish.flavorName.toLowerCase().includes(query.toLowerCase())  // So sánh giá trị người dùng nhập với tên món (flavorName)
+                return dish.name.toLowerCase().includes(query.toLowerCase())  // So sánh giá trị người dùng nhập với tên món (flavorName)
             })
             setFilteredDishes(filtered)
         }
@@ -61,6 +62,21 @@ function Header() {
     const handleSelectDish = (dishId, dishName) => {
         setSearchQuery('')
         setFilteredDishes([])
+    }
+
+    // Tăng giảm số lượng 
+    const handleIncrease = () => {
+        const newQuantity = quantity + 1
+        setQuantity(newQuantity)
+        if (onQuantityChange) onQuantityChange(newQuantity)
+    }
+    
+    const handleDecrease = () => {
+        if (quantity > 1) {
+            const newQuantity = quantity - 1
+            setQuantity(newQuantity)
+            if (onQuantityChange) onQuantityChange(newQuantity) 
+        }
     }
 
     return (
@@ -94,18 +110,18 @@ function Header() {
                             <ListGroup className='z-3 position-absolute mt-2 overflow-y-auto' style={{ maxHeight: '300px' }}>
                                 {filteredDishes.map(dish => (
                                     <ListGroup.Item
-                                        key={dish.beanId}
-                                        onClick={() => handleSelectDish(dish.beanId, dish.flavorName)}
+                                        key={dish.id}
+                                        onClick={() => handleSelectDish(dish.id, dish.name)}
                                         style={{width: '500px'}}
                                     >
-                                        <Link to={dish ? `/dish/${dish.beanId}` : '/'} className="text-decoration-none text-dark">
+                                        <Link to={dish ? `/dish/${dish.id}` : '/'} className="text-decoration-none text-dark">
                                             <div className="d-flex">
                                                 <img
-                                                    src={dish.imageUrl}
+                                                    src={dish.image}
                                                     className='object-fit-scale'
                                                     style={{width: '35px', height: '30px'}}
                                                 />
-                                                <h6 className='ms-3 pt-2'>{dish.flavorName}</h6>
+                                                <h6 className='ms-3 pt-2'>{dish.name}</h6>
                                             </div>
                                         </Link> 
                                     </ListGroup.Item>
@@ -151,11 +167,25 @@ function Header() {
 
             {/* Giỏ hàng */}
             <Offcanvas show={showOffcanvas} onHide={handleClose} placement="end">
-                <Offcanvas.Header closeButton>
+                <Offcanvas.Header closeButton className='border-bottom'>
                     <Offcanvas.Title className='fw-bold'>Giỏ hàng</Offcanvas.Title>
                 </Offcanvas.Header>
                 <Offcanvas.Body>
-                    <Cart />
+                    <div className="d-flex mb-2">
+                        <span className='d-flex align-self-center pb-1' >
+                            <button type='button' className='btn fw-bold border border-0' onClick={handleDecrease}>-</button>
+                            <span className='align-self-center mx-0'>{quantity}</span>
+                            <button type='button' className='btn fw-bold border border-0' onClick={handleIncrease}>+</button>
+                        </span>
+                        <img 
+                            src="https://placehold.co/50x50" 
+                            className='object-fit-scale mx-1' 
+                            style={{width: '50px', height: '50px'}}
+                        />
+                        <p className='fw-medium ms-2 pt-3' style={{fontSize: '14px'}}>Cơm tấm Sài Gòn</p>
+                        <p className='ms-auto pt-3'><Currency amount={50000} fontSize={16} /></p>
+                    </div>
+                    
                 </Offcanvas.Body>
                 <div className="mt-auto px-3 py-2 border-top">
                     <div className="d-flex justify-content-between align-items-end">

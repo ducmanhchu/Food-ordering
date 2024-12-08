@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-function Post() {
+function Posting() {
     const [image, setImage] = useState(null);
     const [title, setTitle] = useState(""); // State cho Tiêu đề
     const [content, setContent] = useState(""); // State cho Nội dung
@@ -53,11 +53,11 @@ function Post() {
                             <li className="breadcrumb-item">
                                 <Link to="/blog" className="link-underline-light text-secondary">Cộng đồng</Link>
                             </li>
-                            <li className="breadcrumb-item active text-dark" aria-current="page">Bài viết của bạn</li>
+                            <li className="breadcrumb-item active text-dark" aria-current="page">Đăng bài</li>
                         </ol>
                     </nav>
                 </Navbar>
-                <h1 style={{ paddingLeft: "12px" }}>Bài viết của bạn</h1>
+                <h1 style={{ paddingLeft: "12px" }}>Đăng bài</h1>
                 <div className="bg-white m-3 rounded p-3">
                     <form onSubmit={handleSubmit}>
                         <div className="mb-3">
@@ -123,4 +123,4 @@ function Post() {
     );
 }
 
-export default Post;
+export default Posting;

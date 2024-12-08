@@ -1,7 +1,10 @@
 import { Container, Navbar } from "react-bootstrap";
 import { Link } from "react-router-dom";
+
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Post from "../components/Post";
+import '../components/Custom.css'
 
 function Blog() {
   return (
@@ -34,16 +37,17 @@ function Blog() {
         <h1>Bài viết nổi bật </h1>
         <div className="d-grid gap-2 d-md-flex justify-content-md-end">
           <Link
-            to="/post"
-            className="btn"
+            to="/posting"
+            className="btn rounded-pill buttonHover"
             style={{
-              backgroundColor: "#000066",
-              color: "#fff",
               textDecoration: "none",
             }}
           >
             Đăng bài
           </Link>
+        </div>
+        <div className="">
+          <Post />
         </div>
       </Container>
 

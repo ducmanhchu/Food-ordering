@@ -18,22 +18,35 @@ function Home() {
         const fetchDishes = async () => {
             setLoading(true);
             try {
-                const response = await dishesApi.getAllDishes()
-
-                if (response) {
-                    const dishesData = response.items || []  
+                const dishesResponse = await dishesApi.getAllDishes() || []
+                const categoriesResponse = await dishesApi.getAllCategories() || []
+                
+                if (dishesResponse) {
+                    const dishesData = dishesResponse || []  
+                    const categoriesData = categoriesResponse || []
                     
-                    // Nhóm món ăn theo danh mục
-                    const dishCatagories = dishesData.reduce((acc, dish) => {   // Danh sách gồm danh mục và các món ăn của nó
-                        const catagoryName = dish.groupName[0]   // Thuộc tính dùng để chia nhóm (groupName[0])
-                        if (!acc[catagoryName]) {
-                            acc[catagoryName] = []
+                    // Nhóm món ăn theo id danh mục
+                    const dishGroupbyIdCategory = dishesData.reduce((acc, dish) => {   
+                        const categoryId = dish.category
+                        if (!acc[categoryId]) {
+                            acc[categoryId] = []
                         }
-                        acc[catagoryName].push(dish)
+                        acc[categoryId].push(dish)
                         return acc
                     }, {})
 
-                    setCategories(dishCatagories)
+                    const categoryMap = categoriesData.reduce((acc, { id, name }) => {
+                        acc[id] = name;
+                        return acc;
+                    }, {})
+
+                    const dishGroupbyNameCategory = Object.keys(dishGroupbyIdCategory).reduce((acc, key) => {
+                        const newKey = categoryMap[key]; 
+                        acc[newKey] = dishGroupbyIdCategory[key];  
+                        return acc;
+                    }, {})
+
+                    setCategories(dishGroupbyNameCategory)
                 }
             } catch (error) {
                 console.log("Lỗi khi lấy dữ liệu:", error)
@@ -54,6 +67,10 @@ function Home() {
                 {loading ? (
                     <div className="d-flex justify-content-center">
                         <Spinner animation="border" variant="secondary"/>
+                    </div>
+                ) : Object.keys(categories).length === 0 ? (
+                    <div className="text-center text-secondary">
+                        Không có món ăn nào để hiển thị!
                     </div>
                 ) : (
                     Object.keys(categories).map((group, index) => (
