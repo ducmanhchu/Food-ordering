@@ -98,7 +98,7 @@ function Header() {
 
     return (
         <>
-            <Navbar className='bg-white'>
+            <Navbar className='bg-white sticky-top'>
                 <Container className='py-2 d-flex justify-content-between'>
                     {/* Logo  */}
                     <Navbar.Brand as={Link} to="/">
@@ -150,22 +150,24 @@ function Header() {
                     <div className="d-flex align-items-center" style={{ cursor: 'pointer' }}>
                         {/* Blog  */}
                         <Link to='/blog'>
-                            <img src={GroupLogo} alt="Group Logo" height='30' className='me-4'/>                        
+                            <img src={GroupLogo} alt="Group Logo" height='30' className='me-4 iconHover'/>                        
                         </Link>
                         {/* Giỏ hàng */}
-                        <img src={BagLogo} alt="Bag Logo" height='30' className='me-2' onClick={handleShow}/>
+                        <img src={BagLogo} alt="Bag Logo" height='30' className='me-2 iconHover' onClick={handleShow}/>
                         {/* Người dùng */}
                         <Dropdown className='p-0'>
                             <Dropdown.Toggle className='bg-transparent border border-0'>
-                                <img src={UserLogo} className='' alt="User Logo" height='30'/>
+                                <img src={UserLogo} className='iconHover' alt="User Logo" height='30'/>
                             </Dropdown.Toggle>
 
                             <Dropdown.Menu>
                                 {isLoggedIn ? (
                                     <>
+                                        <Dropdown.Header className='fw-medium'>{userName}</Dropdown.Header>
+                                        <Dropdown.Divider />
                                         <Dropdown.Item>
                                             <Link to="/account" className="text-decoration-none text-black">
-                                                {userName}
+                                                Trang cá nhân
                                             </Link>
                                         </Dropdown.Item>
                                         <Dropdown.Item>
