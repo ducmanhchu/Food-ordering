@@ -47,37 +47,51 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
         
+# class OrderSerializer(serializers.ModelSerializer):
+#     products = ProductSerializer(many=True, read_only=True)
+
+#     class Meta:
+#         model = Order
+#         fields = '__all__'
+
+#     def create(self, validated_data):
+#         # Lấy danh sách ID sản phẩn và xóa khỏi dữ liệu validated_data để tạo Order
+#         product_data = validated_data.pop('products')
+
+#         # Tạo Order trước
+#         order = Order.objects.create(**validated_data)
+
+#         # Duyệt qua danh sách ID sản phẩm để tạo OrderItem
+#         for pro_item  in product_data:
+#             pro_id = pro_item.get('id')
+#             # Lấy đối tượng Producs từ ID
+#             quantity = pro_item .get('quantity', 1)
+#             try:
+#                 product = Product.objects.get(id=pro_id)
+#                 # thêm sách vào order = Order.objects.create(**validated_data) đã tạo trước đó
+#                 order.products.add(product)
+
+#             except Product.DoesNotExist:
+#                 raise serializers.ValidationError(f"Sản phẩm với ID {pro_id} không tồn tại")
+
+#             # Tạo OrderItem với số lượng mặc định là 1
+#             OrderItem.objects.create(order=order, product=product, quantity=quantity)
+
+#         return order
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer()  # Serialize thông tin sản phẩm
+
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity', 'total_value']
+
 class OrderSerializer(serializers.ModelSerializer):
-    products = ProductSerializer(many=True, read_only=True)
+    products = OrderItemSerializer(source='orderitem_set', many=True, read_only=True)
 
     class Meta:
         model = Order
-        fields = '__all__'
-
-    def create(self, validated_data):
-        # Lấy danh sách ID sản phẩn và xóa khỏi dữ liệu validated_data để tạo Order
-        product_data = validated_data.pop('products')
-
-        # Tạo Order trước
-        order = Order.objects.create(**validated_data)
-
-        # Duyệt qua danh sách ID sản phẩm để tạo OrderItem
-        for pro_item  in product_data:
-            pro_id = pro_item.get('id')
-            # Lấy đối tượng Producs từ ID
-            quantity = pro_item .get('quantity', 1)
-            try:
-                product = Product.objects.get(id=pro_id)
-                # thêm sách vào order = Order.objects.create(**validated_data) đã tạo trước đó
-                order.products.add(product)
-
-            except Product.DoesNotExist:
-                raise serializers.ValidationError(f"Sản phẩm với ID {pro_id} không tồn tại")
-
-            # Tạo OrderItem với số lượng mặc định là 1
-            OrderItem.objects.create(order=order, product=product, quantity=quantity)
-
-        return order
+        fields = ['id', 'tracking_number', 'status', 'created_at', 'updated_at',
+                  'hovaten', 'sdt', 'email', 'diachi', 'tongtien', 'products']
         
 class DiscountSerializer(serializers.ModelSerializer):
     class Meta:

@@ -13,6 +13,8 @@ axiosClient.interceptors.response.use(
   (error) => Promise.reject(error.response?.data || error)
 );
 
+const token = localStorage.getItem("access_token");  // Đảm bảo lấy token từ localStorage
+
 axiosClient.interceptors.request.use(
     (config) => {
       const token = localStorage.getItem("access");
@@ -33,5 +35,6 @@ axiosClient.interceptors.request.use(
     }
   );
   
+
 
 export default axiosClient;

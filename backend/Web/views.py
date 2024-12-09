@@ -195,30 +195,47 @@ def customer_orders(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
+    # Lấy thông tin khách hàng
     customer = Customer.objects.filter(user=request.user).first()
     if not customer:
         return Response({'error': 'Người dùng không phải là khách hàng.'}, status=status.HTTP_400_BAD_REQUEST)
 
     data = request.data
-    products_data = data.get('products', [])
-    payment_method_id = data.get('Payment Method')
-    print(payment_method_id)
-    payment = PaymentMethod.objects.get(id=payment_method_id)
+    products_data = data.get('products', [])  # Danh sách sản phẩm bao gồm {id, quantity}
+    payment_method_id = data.get('payment_method')
 
-    # Kiểm tra sản phẩm
+    # Kiểm tra phương thức thanh toán
+    try:
+        payment = PaymentMethod.objects.get(id=payment_method_id)
+    except PaymentMethod.DoesNotExist:
+        return Response({'error': 'Phương thức thanh toán không hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Kiểm tra danh sách sản phẩm
     if not products_data:
         return Response({'error': 'Danh sách sản phẩm không được để trống.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    products = []
     total_price = 0.0
+    order_items = []
 
-    for product_id in products_data:
+    # Duyệt qua danh sách sản phẩm để tính tổng giá và tạo danh sách tạm cho OrderItem
+    for item_data in products_data:
+        product_id = item_data.get('id')
+        quantity = item_data.get('quantity', 1)
+
         try:
             product = Product.objects.get(id=product_id)
-            products.append(product)
-            total_price += product.price
         except Product.DoesNotExist:
             return Response({'error': f'Sản phẩm với ID {product_id} không tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Tính tổng giá trị
+        total_price += product.price * quantity
+
+        # Lưu OrderItem vào danh sách tạm
+        order_items.append({
+            'product': product,
+            'quantity': quantity,
+            'total_value': product.price * quantity
+        })
 
     # Tạo đơn hàng
     order = Order.objects.create(
@@ -229,12 +246,19 @@ def create_order(request):
         email=data.get('email', customer.user.email),
         diachi=data.get('diachi', customer.user.address),
         status='Chờ xác nhận',
-        payment_method= payment
+        payment_method=payment
     )
 
-    # Thêm sản phẩm vào đơn hàng
-    order.products.set(products)
+    # Tạo OrderItem cho từng sản phẩm và liên kết với Order
+    for item in order_items:
+        OrderItem.objects.create(
+            order=order,
+            product=item['product'],
+            quantity=item['quantity'],
+            total_value=item['total_value']
+        )
 
-    # Trả về dữ liệu đơn hàng
+    # Serialize dữ liệu đơn hàng
     serializer = OrderSerializer(order)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+

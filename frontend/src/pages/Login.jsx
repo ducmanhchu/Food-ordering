@@ -24,6 +24,11 @@ function Login() {
             sessionStorage.setItem('username', response.username);
             sessionStorage.setItem('userID', response.userID);
 
+            localStorage.setItem('access_token', response.access);
+            localStorage.setItem('refresh_token', response.refresh)
+            localStorage.setItem('username', response.username);
+            localStorage.setItem('userID', response.userID);
+
             if (sessionStorage.getItem('access_token')) {
                 setShow(true)
                 setTimeout(() => {
