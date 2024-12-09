@@ -212,7 +212,7 @@ class PaymentMethod(models.Model):
         ('MOMO', 'MOMO'),
     ]
     methodname = models.CharField(max_length=20, choices=METHOD_CHOICES, default='COD')
-    QRcode = models.ImageField(null=True, blank=True)
+    QRcode = models.FileField(null=True, blank=True)
     
     def __str__(self):
         return self.methodname
