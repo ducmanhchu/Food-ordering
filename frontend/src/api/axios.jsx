@@ -16,16 +16,25 @@ axiosClient.interceptors.response.use(
 const token = localStorage.getItem("access_token");  // Đảm bảo lấy token từ localStorage
 
 axiosClient.interceptors.request.use(
-  (config) => {
-    if (token && !config.url.includes("/login/") && !config.url.includes("/register/")) {
-      config.headers["Authorization"] = `Bearer ${token}`;  // Gửi token trong header Authorization
+    (config) => {
+      const token = localStorage.getItem("access");
+  
+      // Chỉ thêm token cho các API liên quan đến xác thực, như /orders/
+      if (
+        token &&
+        !config.url.includes("/login/") &&
+        !config.url.includes("/register/") &&
+        !config.url.includes("/products/")  // Bỏ qua API products
+      ) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+  );
+  
 
 
 export default axiosClient;
