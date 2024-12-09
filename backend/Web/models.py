@@ -125,6 +125,14 @@ class Customer(models.Model):
         
     def __str__(self):
         return self.user.username
+    
+    def save(self, *args, **kwargs):
+        super(Customer, self).save(*args, **kwargs)
+        try:
+            cart = Cart.objects.get(customer=self)
+        except:
+            cart = Cart.objects.create(customer=self)
+            cart.save()
 
 # Bảng con: Employee
 class Employee(models.Model):
@@ -305,15 +313,18 @@ class Cart(models.Model):
     id = models.AutoField(primary_key=True)
     customer = models.OneToOneField(Customer, on_delete=models.CASCADE)
     quantity = models.PositiveSmallIntegerField(default=0)
-    products = models.ManyToManyField(Product, blank=True)
+    products = models.ManyToManyField(Product, blank=True, null=True)
     total_value = models.PositiveIntegerField(default=0)
     
     def __str__(self):
         return f"Cart of {self.customer.user.username}"
     
-    def save(self, *args, **kwargs):
-        self.quantity = self.products.count()
-        super().save(*args, **kwargs)
+    def total_product_type(self):
+        return self.products.count()
+    
+    # def save(self, *args, **kwargs):
+    #     self.quantity = self.products.count()
+    #     super().save(*args, **kwargs)
       
 class CartItem(models.Model):
     id = models.AutoField(primary_key=True)

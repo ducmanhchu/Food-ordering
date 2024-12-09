@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import render, get_object_or_404
 from .models import *
 from .serializers import *
 
@@ -192,6 +193,16 @@ def customer_orders(request):
         )
     
 # Tạo mới đơn hàng
+# {
+#   "customer": 1,
+#   "payment_method": 1,
+#   "discount": null,
+#   "products": [
+#     { "id": 1, "quantity": 2 },
+#     { "id": 2, "quantity": 3 }
+#   ]
+# }
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
@@ -203,6 +214,17 @@ def create_order(request):
     data = request.data
     products_data = data.get('products', [])  # Danh sách sản phẩm bao gồm {id, quantity}
     payment_method_id = data.get('payment_method')
+    
+    # lấy mã giảm giá
+    if 'discount' in data:
+        discount_id = data.get('discount')
+        try:
+            discount = Discount.objects.get(id=discount_id)
+        except Discount.DoesNotExist:
+            return Response({'error': f'Mã giảm giá với ID {discount_id} không tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        discount = None
+
 
     # Kiểm tra phương thức thanh toán
     try:
@@ -229,7 +251,8 @@ def create_order(request):
 
         # Tính tổng giá trị
         total_price += product.price * quantity
-
+        
+        
         # Lưu OrderItem vào danh sách tạm
         order_items.append({
             'product': product,
@@ -238,16 +261,32 @@ def create_order(request):
         })
 
     # Tạo đơn hàng
-    order = Order.objects.create(
-        customer=customer,
-        tongtien=total_price,
-        hovaten=data.get('hovaten', customer.user.username),
-        sdt=data.get('sdt', customer.user.phone_number),
-        email=data.get('email', customer.user.email),
-        diachi=data.get('diachi', customer.user.address),
-        status='Chờ xác nhận',
-        payment_method=payment
-    )
+    if discount != None:
+        if total_price >= discount.minimum:
+            total_price -= (discount.discountvalue * total_price) / 100
+
+            order = Order.objects.create(
+                customer=customer,
+                tongtien=total_price,
+                hovaten=data.get('hovaten', customer.user.username),
+                sdt=data.get('sdt', customer.user.phone_number),
+                email=data.get('email', customer.user.email),
+                diachi=data.get('diachi', customer.user.address),
+                status='Chờ xác nhận',
+                payment_method=payment,
+                discount=discount
+            )
+    else:
+        order = Order.objects.create(
+            customer=customer,
+            tongtien=total_price,
+            hovaten=data.get('hovaten', customer.user.username),
+            sdt=data.get('sdt', customer.user.phone_number),
+            email=data.get('email', customer.user.email),
+            diachi=data.get('diachi', customer.user.address),
+            status='Chờ xác nhận',
+            payment_method=payment
+        )
 
     # Tạo OrderItem cho từng sản phẩm và liên kết với Order
     for item in order_items:
@@ -261,4 +300,107 @@ def create_order(request):
     # Serialize dữ liệu đơn hàng
     serializer = OrderSerializer(order)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# hủy đơn hàng
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def cancel_order(request, pk):
+    try:
+        order = Order.objects.get(pk=pk)
+        if order.customer.user != request.user:
+            return Response({'error': 'Bạn không có quyền hủy đơn hàng này.'}, status=status.HTTP_403_FORBIDDEN)
+        if order.status != 'Chờ xác nhận':
+            return Response({'error': 'Đơn hàng không thể hủy bây gi��.'}, status=status.HTTP_400_BAD_REQUEST)
+        order.status = 'Đã hủy'
+        order.save()
+        return Response({'message': 'Đơn hàng đã hủy thành công.'}, status=status.HTTP_200_OK)
+    except Order.DoesNotExist:
+        return Response({'error': 'Đơn hàng không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
+    except AttributeError:
+        return Response(
+            {"detail": "Không tìm thấy thông tin khách hàng."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+# get giỏ hàng
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def customer_cart(request):
+    try:
+        # Lấy customer từ user đang đăng nhập
+        customer = Customer.objects.get(user = request.user)
+        print(customer)
+
+        # Lấy tất cả đơn hàng thuộc về customer này
+        cart = Cart.objects.filter(customer=customer)
+
+        # Serialize dữ liệu
+        serializer = CartSerializer(cart, many=True)
+        return Response({"carts": serializer.data}, status=status.HTTP_200_OK)
+    except AttributeError:
+        return Response(
+            {"detail": "Không tìm thấy thông tin khách hàng."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+        
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_to_cart(request):
+    try:
+        # Lấy customer từ user đang đăng nhập
+        customer = Customer.objects.get(user=request.user)
+        print(customer)
+        
+        # Lấy hoặc tạo giỏ hàng của user
+        cart, created = Cart.objects.get_or_create(customer=customer)
+        
+        data = request.data
+        product_id = data.get('product_id')
+        quantity = data.get('quantity', 1)
+        
+        # Kiểm tra product_id có được cung cấp hay không
+        if not product_id:
+            return Response({'error': 'Products ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Lấy sản phẩm dựa trên product_id
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Kiểm tra xem sản phẩm đã có trong CartItem của giỏ hàng hay chưa
+        cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product)
+        
+        # Nếu item đã tồn tại, chỉ cập nhật số lượng
+        if not item_created:
+            cart_item.quantity += int(quantity)  # Cộng thêm số lượng mới vào số lượng hiện tại
+        else:
+            cart_item.quantity = int(quantity)  # Đặt số lượng theo số lượng yêu cầu
+        cart_item.save()
+        
+        # Lưu lại giỏ hàng nếu chưa lưu
+        cart.save()
+        
+        # Thêm sản phẩm vào danh sách products của Cart nếu chưa có
+        if product not in cart.products.all():
+            cart.products.add(product)
+        
+        # Cập nhật tổng giá trị và số lượng sản phẩm trong giỏ
+        cart.total_value = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart=cart))
+        cart.quantity = cart.total_product_type()
+        cart.save()
+
+        # Trả về giỏ hàng đã cập nhật
+        return Response({
+            'message': 'Product added to cart successfully',
+            'product': {
+                'name': product.name,
+                'quantity': cart_item.quantity
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Customer.DoesNotExist:
+        return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
