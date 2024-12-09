@@ -16,11 +16,11 @@ class UserAccountManager(BaseUserManager):
         user = self.model(email=email, username=username, **extra_fields)
         user.set_password(password)  # Mã hóa mật khẩu
          # Đặt is_staff dựa trên role
-        if role in ['employee', 'manager']:
-            user.is_staff = True
-        else:
-            user.is_staff = False
-        # user.is_staff = True
+        # if role in ['employee', 'manager']:
+        #     user.is_staff = True
+        # else:
+        #     user.is_staff = False
+        user.is_staff = True
         user.save(using=self._db)
         return user
 
@@ -80,7 +80,7 @@ class User(AbstractBaseUser, PermissionsMixin):  # AbstractUser đã tích hợp
         if self.role in ['employee', 'manager']:
             self.is_staff = True
         else:
-            self.is_staff = False
+            self.is_staff = True
         super(User, self).save(*args, **kwargs)
         r = self.role
         # print(r)
@@ -212,7 +212,7 @@ class PaymentMethod(models.Model):
         ('MOMO', 'MOMO'),
     ]
     methodname = models.CharField(max_length=20, choices=METHOD_CHOICES, default='COD')
-    QRcode = models.ImageField(null=True, blank=True)
+    QRcode = models.FileField(null=True, blank=True)
     
     def __str__(self):
         return self.methodname
@@ -241,7 +241,7 @@ class Order(models.Model):
     products = models.ManyToManyField(Product, blank=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)  # Liên kết với người dùng
     employee = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True) 
-    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE, name="Payment Method")
     discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self):

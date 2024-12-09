@@ -13,12 +13,16 @@ axiosClient.interceptors.response.use(
   (error) => Promise.reject(error.response?.data || error)
 );
 
-const token = localStorage.getItem("access_token");  // Đảm bảo lấy token từ localStorage
-
 axiosClient.interceptors.request.use(
   (config) => {
-    if (token && !config.url.includes("/login/") && !config.url.includes("/register/")) {
-      config.headers["Authorization"] = `Bearer ${token}`;  // Gửi token trong header Authorization
+    const token = localStorage.getItem("access");
+
+    if (
+      token &&
+      !config.url.includes("/login/") &&
+      !config.url.includes("/register/")
+    ) {
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },
@@ -26,6 +30,5 @@ axiosClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
 
 export default axiosClient;
