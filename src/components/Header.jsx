@@ -17,7 +17,8 @@ function Header() {
     // Ngăn người dùng sử dụng các nút điều hướng trên Header khi đang ở trang thanh toán 
     const location = useLocation()
     const isCheckout = location.pathname === '/checkout'
-    const [show, setShow] = useState(false)
+    const [showCheckout, setShowCheckout] = useState(false)
+    const [showLogout, setShowLogout] = useState(false)
     const [dishes, setDishes] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [filteredDishes, setFilteredDishes] = useState([])
@@ -37,13 +38,14 @@ function Header() {
     const handleLogout = () => {
         sessionStorage.clear() // Xóa tất cả thông tin trong sessionStorage
         setIsLoggedIn(false) // Cập nhật trạng thái
+        setShowLogout(true)
         navigate('/')
     }
 
     const handleClose = () => setShowOffcanvas(false)
     const handleShow = () => {
         if (isCheckout) {
-            setShow(true)
+            setShowCheckout(true)
         } else {
             setShowOffcanvas(true);
         }
@@ -228,8 +230,13 @@ function Header() {
             </Offcanvas>
 
             <ToastContainer className="mt-3" position="top-center">
-                <Toast className="bg-warning-subtle text-center" onClose={() => setShow(false)} delay={3000} show={show} autohide>
+                <Toast className="bg-warning-subtle text-center" onClose={() => setShowCheckout(false)} delay={3000} show={showCheckout} autohide>
                     <Toast.Body>Hãy hoàn thành việc thanh toán!</Toast.Body>
+                </Toast>    
+            </ToastContainer>
+            <ToastContainer className="mt-3" position="top-center">
+                <Toast className="bg-success-subtle text-center" onClose={() => setShowLogout(false)} delay={2500} show={showLogout} autohide>
+                    <Toast.Body>Đăng xuất thành công!</Toast.Body>
                 </Toast>    
             </ToastContainer>
         </>

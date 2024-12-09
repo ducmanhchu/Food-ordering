@@ -84,8 +84,8 @@ function Register() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
-                                {error && <p className="text-danger mb-3 ">{error}</p>}
-                                <Button className='buttonHover rounded-pill' style={{width: '100%'}} type='submit'>
+                                {error && <p className="text-danger mb-0">{error}</p>}
+                                <Button className='buttonHover rounded-pill mt-3' style={{width: '100%'}} type='submit'>
                                     Tạo tài khoản
                                 </Button>
                             </Form>

@@ -100,9 +100,9 @@ function Login() {
                                       onChange={(e) => setPassword(e.target.value)}
                                       required
                                       />
-                                  {error && <p className="text-danger mb-3 ">{error}</p>}
+                                  {error && <p className="text-danger mb-0">{error}</p>}
                                   <Button
-                                      className="buttonHover rounded-pill"
+                                      className="buttonHover rounded-pill mt-3"
                                       style={{ width: "100%" }}
                                       type="submit"
                                   >
