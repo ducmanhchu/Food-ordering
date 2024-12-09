@@ -169,12 +169,72 @@ def customer_orders(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-# Tạo mới đơn hàng
+    
+# Danh sách đơn hàng
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def customer_orders(request):
+    try:
+        # Lấy customer từ user đang đăng nhập
+        customer = Customer.objects.get(user = request.user)
+        print(customer)
 
+        # Lấy tất cả đơn hàng thuộc về customer này
+        orders = Order.objects.filter(customer=customer).order_by('-created_at')
+
+        # Serialize dữ liệu
+        serializer = OrderSerializer(orders, many=True)
+        return Response({"orders": serializer.data}, status=status.HTTP_200_OK)
+    except AttributeError:
+        return Response(
+            {"detail": "Không tìm thấy thông tin khách hàng."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+# Tạo mới đơn hàng
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_order(request):
-    serializer = OrderSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    customer = Customer.objects.filter(user=request.user).first()
+    if not customer:
+        return Response({'error': 'Người dùng không phải là khách hàng.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    data = request.data
+    products_data = data.get('products', [])
+    payment_method_id = data.get('Payment Method')
+    print(payment_method_id)
+    payment = PaymentMethod.objects.get(id=payment_method_id)
+
+    # Kiểm tra sản phẩm
+    if not products_data:
+        return Response({'error': 'Danh sách sản phẩm không được để trống.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    products = []
+    total_price = 0.0
+
+    for product_id in products_data:
+        try:
+            product = Product.objects.get(id=product_id)
+            products.append(product)
+            total_price += product.price
+        except Product.DoesNotExist:
+            return Response({'error': f'Sản phẩm với ID {product_id} không tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Tạo đơn hàng
+    order = Order.objects.create(
+        customer=customer,
+        tongtien=total_price,
+        hovaten=data.get('hovaten', customer.user.username),
+        sdt=data.get('sdt', customer.user.phone_number),
+        email=data.get('email', customer.user.email),
+        diachi=data.get('diachi', customer.user.address),
+        status='Chờ xác nhận',
+        payment_method= payment
+    )
+
+    # Thêm sản phẩm vào đơn hàng
+    order.products.set(products)
+
+    # Trả về dữ liệu đơn hàng
+    serializer = OrderSerializer(order)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)

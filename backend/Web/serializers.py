@@ -48,7 +48,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 class OrderSerializer(serializers.ModelSerializer):
-    products = serializers.ListField(write_only=True)
+    products = ProductSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
