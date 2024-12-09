@@ -14,21 +14,24 @@ axiosClient.interceptors.response.use(
 );
 
 axiosClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access");
-
-    if (
-      token &&
-      !config.url.includes("/login/") &&
-      !config.url.includes("/register/")
-    ) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    (config) => {
+      const token = localStorage.getItem("access");
+  
+      // Chỉ thêm token cho các API liên quan đến xác thực, như /orders/
+      if (
+        token &&
+        !config.url.includes("/login/") &&
+        !config.url.includes("/register/") &&
+        !config.url.includes("/products/")  // Bỏ qua API products
+      ) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+  );
+  
 
 export default axiosClient;
