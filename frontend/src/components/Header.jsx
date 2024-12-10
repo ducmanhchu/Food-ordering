@@ -37,6 +37,7 @@ function Header() {
     // Xử lý đăng xuất
     const handleLogout = () => {
         sessionStorage.clear() // Xóa tất cả thông tin trong sessionStorage
+        localStorage.clear()
         setIsLoggedIn(false) // Cập nhật trạng thái
         setShowLogout(true)
         navigate('/')
@@ -155,7 +156,7 @@ function Header() {
                             <img src={GroupLogo} alt="Group Logo" height='30' className='me-4 iconHover'/>                        
                         </Link>
                         {/* Giỏ hàng */}
-                        <img src={BagLogo} alt="Bag Logo" height='30' className='me-2 iconHover' onClick={handleShow}/>
+                            <img src={BagLogo} alt="Bag Logo" height='30' className='me-2 iconHover' onClick={handleShow}/>
                         {/* Người dùng */}
                         <Dropdown className='p-0'>
                             <Dropdown.Toggle className='bg-transparent border border-0'>

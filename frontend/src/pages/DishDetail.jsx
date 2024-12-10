@@ -48,7 +48,7 @@ function DishDetail() {
                 <Breadcrumb className='my-3'>
                     <Link to='/' className='text-decoration-none text-secondary me-2'>Trang chủ</Link>
                     <span className='text-secondary me-2'>&gt;</span>
-                    <Breadcrumb.Item active>
+                    <Breadcrumb.Item active className='text-dark'>
                         {dish ? dish.name : "Đang tải..."}
                     </Breadcrumb.Item>
                 </Breadcrumb>

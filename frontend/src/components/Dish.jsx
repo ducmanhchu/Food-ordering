@@ -5,7 +5,7 @@ import Star from './Star'
 import Currency from './Currency'
 import './Custom.css'
 
-function    Dish({ data }) {
+function Dish({ data }) {
     return (
         <>
             {data.map((item) => (
