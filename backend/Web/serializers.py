@@ -103,13 +103,15 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
         model = PaymentMethod
         fields = '__all__'
         
-class CartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cart
-        fields = '__all__'
-        
 class CartItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer()  # Serialize thông tin sản phẩm
     class Meta:
         model = CartItem
+        fields = '__all__'
+        
+class CartSerializer(serializers.ModelSerializer):
+    products = OrderItemSerializer(source='cartitem_set', many=True, read_only=True)
+    class Meta:
+        model = Cart
         fields = '__all__'
         
