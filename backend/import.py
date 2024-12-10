@@ -19,8 +19,12 @@ def import_data_from_json(json_data):
     for item in json_data:
         # print(f"Processing item: {item}")  # Kiểm tra giá trị của item
         if 'category' in item:
-            print(item['category'])
-            category = Category.objects.get(name = item['category'])
+            try:
+                print(item['category'])
+                category = Category.objects.get(name = item['category'])
+            except:
+                category = Category.objects.create(name = item['category'])
+                category.save()
             
 
         try:

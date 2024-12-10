@@ -19,7 +19,7 @@ class UserAccountManager(BaseUserManager):
         if role in ['employee', 'manager']:
             user.is_staff = True
         else:
-            user.is_staff = False
+            user.is_staff = True
         # user.is_staff = True
         user.save(using=self._db)
         return user
@@ -28,7 +28,15 @@ class UserAccountManager(BaseUserManager):
     def create_superuser(self, email, username, password=None, **extra_fields):
         extra_fields.setdefault('role', 'manager')
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, username, password, role='manager', **extra_fields)
+        extra_fields.setdefault('is_staff', True)
+
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser phải có is_superuser=True.')
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser phải có is_staff=True.')
+
+        return self.create_user(email=email, username=username, password=password, **extra_fields)
+
     
      # Tùy chỉnh hàm authenticate
     def authenticate(self, request, email=None, password=None, **kwargs):
@@ -55,16 +63,13 @@ class User(AbstractBaseUser, PermissionsMixin):  # AbstractUser đã tích hợp
     address = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)  # Chỉ định quyền truy cập Admin
-    is_superuser = models.BooleanField(default=False)  # Quyền quản trị cao nhất
+    is_superuser = models.BooleanField(default=False) 
 
-    # Trường mà Django sẽ sử dụng để xác định danh tính người dùng
-    USERNAME_FIELD = 'email'  # Bạn có thể chọn 'email' nếu muốn đăng nhập bằng email
-    REQUIRED_FIELDS = ['username']  # Những trường bắt buộc khi tạo superuser
+    USERNAME_FIELD = 'email'  # đăng nhập bằng email
+    REQUIRED_FIELDS = ['username'] 
     
-     # Thêm trường date_joined
     date_joined = models.DateTimeField(default=timezone.now)
 
-    # Trình quản lý cho mô hình này
     objects = UserAccountManager()
 
     class Meta:
@@ -76,20 +81,16 @@ class User(AbstractBaseUser, PermissionsMixin):  # AbstractUser đã tích hợp
         return self.username
         
     def save(self, *args, **kwargs):
-        # tao role tu dong khi tao moi project
         if self.role in ['employee', 'manager']:
             self.is_staff = True
         else:
-            self.is_staff = False
+            self.is_staff = True
         super(User, self).save(*args, **kwargs)
         r = self.role
         # print(r)
         if (r == 'employee'):
             try:
                 stf = Employee.objects.get(user = self)
-                # user = User.objects.get(email = self.email)
-                # # user.is_active = True
-                # user.save()
             except:
                 stf = Employee.objects.create(user = self)
                 stf.save()
@@ -106,12 +107,7 @@ class User(AbstractBaseUser, PermissionsMixin):  # AbstractUser đã tích hợp
             except:
                 cus = Customer.objects.create(user = self)
                 cus.save()
-            # if r == 'customer': continue
-            # try:
-            #     role= Role.objects.get(project= self, role= r)
-            # except:
-            #     role= Role(project= self, role= r)
-            #     role.save()
+            
 
 # Bảng con: Customer
 class Customer(models.Model):

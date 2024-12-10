@@ -155,6 +155,7 @@ def delete_category(request, pk):
 def customer_orders(request):
     try:
         # Lấy customer từ user đang đăng nhập
+        print(request.user)
         customer = Customer.objects.get(user = request.user)
         print(customer)
 
@@ -164,28 +165,8 @@ def customer_orders(request):
         # Serialize dữ liệu
         serializer = OrderSerializer(orders, many=True)
         return Response({"orders": serializer.data}, status=status.HTTP_200_OK)
-    except AttributeError:
-        return Response(
-            {"detail": "Không tìm thấy thông tin khách hàng."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    
-# Danh sách đơn hàng
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def customer_orders(request):
-    try:
-        # Lấy customer từ user đang đăng nhập
-        customer = Customer.objects.get(user = request.user)
-        print(customer)
-
-        # Lấy tất cả đơn hàng thuộc về customer này
-        orders = Order.objects.filter(customer=customer).order_by('-created_at')
-
-        # Serialize dữ liệu
-        serializer = OrderSerializer(orders, many=True)
-        return Response({"orders": serializer.data}, status=status.HTTP_200_OK)
+    except Customer.DoesNotExist:
+        return Response({'error': f'Người dùng {request.user} không có giỏ hàng'}, status=status.HTTP_404_NOT_FOUND)
     except AttributeError:
         return Response(
             {"detail": "Không tìm thấy thông tin khách hàng."},
@@ -344,6 +325,10 @@ def customer_cart(request):
             status=status.HTTP_400_BAD_REQUEST
         )
         
+# {
+#     "product_id": 1,
+#     "quantity": 2
+# }
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def add_to_cart(request):
