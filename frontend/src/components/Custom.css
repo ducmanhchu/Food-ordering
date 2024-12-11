@@ -31,6 +31,18 @@
     border-color: black;
 }
 
+.rButtonHover {
+    color: white;
+    background-color: red;
+    transition: background-color 0.3s ease;
+    border-color: red;
+}
+.rButtonHover:hover {
+    background-color: white;
+    color: red;
+    border-color: red;
+}
+
 .iconHover {
     display: inline-block;
     transition: filter 0.3s ease;
