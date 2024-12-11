@@ -99,6 +99,24 @@ function Header() {
         }
     }
 
+    // Kiểm tra token mỗi 5 phút để yêu cầu đăng nhập lại mỗi khi token hết hạn
+    console.log('Is token expired:', isTokenExpired(sessionStorage.getItem('access_token')));
+    useEffect(() => {
+        const checkTokenInterval = setInterval(() => {
+            const token = sessionStorage.getItem('access_token');
+            if (isTokenExpired(token)) {
+                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
+                sessionStorage.clear();
+                localStorage.clear();
+                setIsLoggedIn(false) // Cập nhật trạng thái
+                setShowLogout(true)
+                navigate('/')
+            }
+        }, 1800000); // Kiểm tra mỗi 30 phút
+    
+        return () => clearInterval(checkTokenInterval);
+    }, []);
+
     return (
         <>
             <Navbar className='bg-white sticky-top'>
@@ -178,6 +196,11 @@ function Header() {
                                                 Đơn hàng của tôi
                                             </Link>
                                         </Dropdown.Item>
+                                        <Dropdown.Item>
+                                            <Link to="/my-posts " className="text-decoration-none text-black">
+                                                Bài viết của tôi
+                                            </Link>
+                                        </Dropdown.Item>
                                         <Dropdown.Item onClick={handleLogout} className="text-decoration-none text-black">
                                             Đăng xuất
                                         </Dropdown.Item>
@@ -242,6 +265,20 @@ function Header() {
             </ToastContainer>
         </>
     )
+}
+
+// Hàm kiểm tra thời gian sống của token
+function isTokenExpired(token) {
+    if (!token) return true; // Token không tồn tại
+
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1])); // Giải mã payload
+        const currentTime = Math.floor(Date.now() / 1000); // Thời gian hiện tại (giây)
+        return payload.exp < currentTime; // Token hết hạn nếu exp < currentTime
+    } catch (error) {
+        console.error('Lỗi khi kiểm tra token:', error);
+        return true; // Lỗi -> Xem như token đã hết hạn
+    }
 }
 
 export default Header

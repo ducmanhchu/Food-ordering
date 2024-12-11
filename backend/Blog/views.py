@@ -104,7 +104,6 @@ def like_post(request, pk):
 
 
 @api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticatedOrReadOnly])
 def comment_list_create(request, post_id):
     try:
         post = Post.objects.get(pk=post_id)
@@ -117,6 +116,8 @@ def comment_list_create(request, post_id):
         return Response(serializer.data)
 
     elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response({'error': 'Bạn phải đăng nhập để bình luận!'}, status=status.HTTP_403_FORBIDDEN)    #Yêu cầu đăng nhập để bình luận
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(author=request.user, post=post)
@@ -152,3 +153,17 @@ def comment_detail(request, pk):
 
         comment.delete()
         return Response({'message': 'Comment deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
+# Danh sách bài viết của riêng người dùng
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_posts(request):
+    # Lấy thông tin người dùng đang đăng nhập
+    user = request.user
+    
+    # Lọc các bài viết theo tác giả
+    posts = Post.objects.filter(author=user).order_by('-created_at')  # Sắp xếp theo thời gian mới nhất
+    
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data)    
+

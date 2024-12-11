@@ -1,5 +1,5 @@
-import { Container, Navbar } from "react-bootstrap";
-import { Link, useAsyncError } from "react-router-dom";
+import { Container, Navbar, Pagination } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import Header from "../components/Header";
@@ -11,13 +11,16 @@ import postsApi from "../api/posts";
 function Blog() {
     const [loading, setLoading] = useState(true);
     const [posts, setPosts] = useState([]);
+    // Phân trang
+    const [currentPage, setCurrentPage] = useState(1)
+    const postsPerPage = 10
 
     // Lấy dữ liệu bài viết
     useEffect(() => {
         const fetchPosts = async () => {
             setLoading(true);
             try {
-                const response = (await postsApi.getAllPosts()) || [];
+                const response = await postsApi.getAllPosts() || [];
                 setPosts(response.posts);
                 console.log("Response:", response)
             } catch (error) {
@@ -28,6 +31,17 @@ function Blog() {
         };
         fetchPosts();
     }, []);
+
+    // Xử lý số bài viết trên một trang
+    const indexOfLastPost = currentPage * postsPerPage
+    const indexOfFirstPost = indexOfLastPost - postsPerPage
+    const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost)
+
+    // Thay đổi trang
+    const paginate = (pageNumber) => {
+        console.log("curPage", pageNumber)
+        setCurrentPage(pageNumber)
+    }
 
     return (
         <>
@@ -77,13 +91,27 @@ function Blog() {
                     ) : posts.length === 0 ? (
                         <p className="text-center text-secondary">Không có bài viết nào để hiển thị</p>
                     ) : (
-                        posts.map((post) => (
+                        currentPosts.map((post) => (   
                             <Post key={post.id} data={post}/>
                         ))
                     )}
                 </div>
+                <Pagination className="justify-content-center mt-4">
+                    {Array.from(
+                        { length: Math.ceil(posts.length / postsPerPage) },
+                        (_, index) => (
+                            <Pagination.Item
+                                key={index + 1}
+                                active={index + 1 === currentPage}
+                                onClick={() => paginate(index + 1)}
+                            >
+                                {index + 1}
+                            </Pagination.Item>
+                        )
+                    )}
+                </Pagination>
             </Container>
-
+            
             <Footer />
         </>
     );

@@ -46,7 +46,8 @@ axiosClient.interceptors.request.use(
           { url: "/tlu/register/", method: "all" },
           { url: "/tlu/products/", method: "all" },
           { url: "/tlu/categories/", method: "all" },
-          { url: "/blog/posts/", method: "get" }  // Chỉ công khai với GET
+          { url: "/blog/posts/", method: "get" },  // Chỉ công khai với GET
+          { url: "/blog/posts/:id/comments/", method: "get" }
       ];
 
       // Kiểm tra nếu URL và phương thức nằm trong danh sách publicEndpoints
