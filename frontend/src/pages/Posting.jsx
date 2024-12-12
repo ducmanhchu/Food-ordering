@@ -95,8 +95,8 @@ function Posting() {
                             />
                         </div>
 
-                        {/* Chọn ảnh */}
-                        {/* <div className="bg-white">
+                    
+                        <div className="bg-white">
                             <div className="mb-3">
                                 <label htmlFor="imageUpload" className="form-label">Chọn ảnh</label>
                                 <input
@@ -113,7 +113,7 @@ function Posting() {
                                     <img src={image} alt="Selected" className="img-fluid" />
                                 </div>
                             )}
-                        </div> */}
+                        </div> 
 
                         <div className="mb-3">
                             <label htmlFor="exampleFormControlTextarea1" className="form-label fw-bold">Nội dung bài viết</label>

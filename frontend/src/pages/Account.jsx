@@ -41,7 +41,7 @@ function Account() {
         </Navbar>
         <div
           className="bg-white p-3 rounded just-content-center"
-          style={{ marginTop: "50px", marginBottom: "90px" }}
+          style={{ marginTop: "30px", marginLeft: "12%",width:"80%" }}
         >
           <h2 className="mb-3">Thông tin của bạn</h2>
           <div className="row">
@@ -81,7 +81,7 @@ function Account() {
                 Upload a picture
               </label>
             </div>
-            <div className="col-md-8 ">
+            <div className="col-md-8 " style={{width:"60%"}}>
               <label for="exampleFormControlInput1" class="form-label fw-bold">
                 Tên tài khoản
               </label>
@@ -89,7 +89,7 @@ function Account() {
                 type="text"
                 className="form-control mb-3"
                 id="exampleFormControlInput1"
-                placeholder="Đức Mạnh Chu"
+                placeholder=""
               />
               <label for="exampleFormControlInput1" class="form-label fw-bold">
                 Email
@@ -98,7 +98,25 @@ function Account() {
                 type="email"
                 className="form-control mb-3"
                 id="exampleFormControlInput1"
-                placeholder="ducmanhchu@gmail.com"
+                placeholder=""
+              />
+              <label for="exampleFormControlInput1" class="form-label fw-bold">
+                Số điện thoại
+              </label>
+              <input
+                type="number"
+                className="form-control mb-3"
+                id="exampleFormControlInput1"
+                placeholder=""
+              />
+              <label for="exampleFormControlInput1" class="form-label fw-bold">
+                Địa chỉ
+              </label>
+              <input
+                type="text"
+                className="form-control mb-3"
+                id="exampleFormControlInput1"
+                placeholder=""
               />
               <div className="d-grid gap-2 d-md-flex justify-content-md-end">
                 <Link
