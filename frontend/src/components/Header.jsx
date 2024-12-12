@@ -8,7 +8,7 @@ import UserLogo from '../assets/User.svg'
 import GroupLogo from '../assets/Group.svg'
 import BagLogo from '../assets/Bag.svg'
 import CartItem from './CartItem';
-import Currency from './Currency'
+import { useCart } from './CartContext';
 import './Custom.css'
 import dishesApi from '../api/dishes';
 
@@ -27,26 +27,10 @@ function Header() {
     const userName = sessionStorage.getItem('username')
     const navigate = useNavigate()
     // Số lượng sản phẩm trong giỏ
-    const [cartCount, setCartCount] = useState(0)
+    const { cartCount } = useCart()
+    // console.log("So luong san pham trong gio:", cartCount)
 
-    //Lấy số lượng sản phẩm trong giỏ hàng
-    useEffect(() => {
-        const fetchCartItems = async () => {
-            try {
-                const response = await dishesApi.customerCart()
-                if (response) {
-                    const totalItems = response.carts[0].quantity || 0
-                    setCartCount(totalItems);
-                }
-            } catch (error) {
-                console.log('Lỗi lấy dữ liệu giỏ hàng: ', error)
-            }
-        }
-    
-        fetchCartItems()
-    }, [])
 
-    
     // Kiểm tra trạng thái đăng nhập
     useEffect(() => {
         const accessToken = sessionStorage.getItem("access_token")
@@ -102,24 +86,6 @@ function Header() {
         setSearchQuery('')
         setFilteredDishes([])
     }
-
-    // Kiểm tra token mỗi 5 phút để yêu cầu đăng nhập lại mỗi khi token hết hạn
-    console.log('Is token expired:', isTokenExpired(sessionStorage.getItem('access_token')));
-    useEffect(() => {
-        const checkTokenInterval = setInterval(() => {
-            const token = sessionStorage.getItem('access_token');
-            if (isTokenExpired(token)) {
-                alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!');
-                sessionStorage.clear();
-                localStorage.clear();
-                setIsLoggedIn(false) // Cập nhật trạng thái
-                setShowLogout(true)
-                navigate('/')
-            }
-        }, 1800000); // Kiểm tra mỗi 30 phút
-    
-        return () => clearInterval(checkTokenInterval);
-    }, []);
 
     return (
         <>
@@ -178,13 +144,31 @@ function Header() {
                             <img src={GroupLogo} alt="Group Logo" height='30' className='me-4 iconHover'/>                        
                         </Link>
                         {/* Giỏ hàng */}
-                        <img 
-                            src={BagLogo} 
-                            alt="Bag Logo" 
-                            height='30' 
-                            className='me-2 iconHover' 
-                            onClick={handleShow} 
-                        />
+                        {cartCount > 0 ? (
+                            <div className="position-relative">
+                                <img 
+                                    src={BagLogo} 
+                                    alt="Bag Logo" 
+                                    height='30' 
+                                    className='me-2 iconHover' 
+                                    onClick={handleShow} 
+                                />
+                                <span 
+                                    className='position-absolute top-0 start-100 translate-middle badge rounded-pill text-white'
+                                    style={{backgroundColor: '#000066'}}
+                                >          
+                                    {cartCount}
+                                </span>
+                            </div>
+                        ) : (
+                            <img 
+                                src={BagLogo} 
+                                alt="Bag Logo" 
+                                height='30' 
+                                className='me-2 iconHover' 
+                                onClick={handleShow} 
+                            />                           
+                        )}
                         {/* Người dùng */}
                         <Dropdown className='p-0'>
                             <Dropdown.Toggle className='bg-transparent border border-0'>
@@ -248,20 +232,6 @@ function Header() {
             </ToastContainer>
         </>
     )
-}
-
-// Hàm kiểm tra thời gian sống của token
-function isTokenExpired(token) {
-    if (!token) return true; // Token không tồn tại
-
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1])); // Giải mã payload
-        const currentTime = Math.floor(Date.now() / 1000); // Thời gian hiện tại (giây)
-        return payload.exp < currentTime; // Token hết hạn nếu exp < currentTime
-    } catch (error) {
-        console.error('Lỗi khi kiểm tra token:', error);
-        return true; // Lỗi -> Xem như token đã hết hạn
-    }
 }
 
 export default Header

@@ -4,10 +4,11 @@ import { Button, Offcanvas } from "react-bootstrap"
 
 import Currency from "./Currency"
 import dishesApi from "../api/dishes"
+import { useCart } from "./CartContext"
 
 function CartItem() {
     const [cart, setCart] = useState([])
-
+    const { updateCartCount } = useCart()
 
     // Lấy dữ liệu giỏ hàng
     useEffect(() => {
@@ -34,7 +35,7 @@ function CartItem() {
             );
             setCart(updatedCart);
     
-            // Gọi API để cập nhật số lượng trên server
+            // Gọi API để cập nhật số lượng 
             const productId = cart[index].product.id;
             const newQuantity = updatedCart[index].quantity;
             await dishesApi.updateCartItem(productId, newQuantity);
@@ -53,7 +54,7 @@ function CartItem() {
                 );
                 setCart(updatedCart);
     
-                // Gọi API để cập nhật số lượng trên server
+                // Gọi API để cập nhật số lượng
                 const productId = cart[index].product.id;
                 const newQuantity = updatedCart[index].quantity;
                 
@@ -79,6 +80,14 @@ function CartItem() {
             // Cập nhật lại trạng thái cart sau khi xóa
             const updatedCart = cart.filter((_, i) => i !== index);
             setCart(updatedCart);
+
+            // Cập nhật số loại sản phẩm trong Context
+            const cartResponse = await dishesApi.customerCart()
+            // console.log("cusCartRes:", cartResponse)
+            const totalItems = cartResponse.carts[0].quantity
+
+            // Cập nhật số lượng giỏ hàng trong context
+            updateCartCount(totalItems)
     
             console.log("Xóa sản phẩm thành công");
         } catch (error) {

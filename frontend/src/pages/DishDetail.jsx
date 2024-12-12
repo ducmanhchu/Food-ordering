@@ -8,6 +8,7 @@ import dishesApi from "../api/dishes"
 import Star from '../components/Star'
 import Currency from '../components/Currency'
 import Review from '../components/Review'
+import { useCart } from '../components/CartContext'
 import '../components/Custom.css'
 
 function DishDetail() {
@@ -17,6 +18,8 @@ function DishDetail() {
     const [error, setError] = useState('')
     // Hiển thị thông báo thêm giỏ hàng thành công
     const [show, setShow] = useState(false)
+    // Hàm cập nhật số lượng loại sản phẩm trong giỏ từ context
+    const { updateCartCount } = useCart()
 
     // Lấy dữ liệu
     useEffect(() => {
@@ -47,9 +50,17 @@ function DishDetail() {
         e.preventDefault()
         try {
             const addReponse = await dishesApi.addToCart(id, quantity) || []
-
+            
             console.log("addRes:", addReponse)
             if (addReponse) {
+                // Gọi API để lấy số lượng sản phẩm mới trong giỏ
+                const cartResponse = await dishesApi.customerCart()
+                // console.log("cusCartRes:", cartResponse)
+                const totalItems = cartResponse.carts[0].quantity
+
+                // Cập nhật số lượng giỏ hàng trong context
+                updateCartCount(totalItems)
+
                 setShow(!show)
             }
         } catch (error) {

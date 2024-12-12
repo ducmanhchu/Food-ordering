@@ -30,7 +30,7 @@ const dishesApi = {
     },
     customerCart() {
         const url = `tlu/carts/`
-        return axiosClient.get(url)
+        return axiosClient.get(url).then(response => response)
     }
 };
 
