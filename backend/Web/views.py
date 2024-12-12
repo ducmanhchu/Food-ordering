@@ -6,7 +6,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import render, get_object_or_404
 from .models import *
 from .serializers import *
+from django.shortcuts import get_object_or_404
 
+
+
+# {
+#     "email": "test@example.com",
+#     "password": "Password123!"
+# }
 @api_view(['POST'])
 def login(request):
     """
@@ -21,6 +28,8 @@ def login(request):
         try:
             user = User.objects.get(email=email)
             if user.check_password(password) and user.role == 'customer':
+                customer = Customer.objects.get(user=user)
+                cart = Cart.objects.get(customer = customer)
                 # Tạo token nếu mật khẩu đúng
                 refresh = RefreshToken.for_user(user)
                 return Response({
@@ -30,6 +39,9 @@ def login(request):
                     'email': user.email,
                     'username': user.username,
                     'role': user.role,
+                    'phone' : user.phone_number,
+                    'address': user.address,
+                    'cart' : cart.total_product_type()
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({'error': 'Mật khẩu không chính xác.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -104,7 +116,7 @@ def delete_product(request, pk):
         return Response({'message': 'Sản phẩm đã được xóa thành công.'}, status=status.HTTP_204_NO_CONTENT)
     except Product.DoesNotExist:
         return Response({'error': 'Sản phẩm không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
-
+    
 # Danh sách Category
 @api_view(['GET'])
 def get_categories(request):
@@ -318,6 +330,7 @@ def customer_cart(request):
 
         # Serialize dữ liệu
         serializer = CartSerializer(cart, many=True)
+        
         return Response({"carts": serializer.data}, status=status.HTTP_200_OK)
     except AttributeError:
         return Response(
@@ -333,28 +346,22 @@ def customer_cart(request):
 @permission_classes([IsAuthenticated])
 def add_to_cart(request):
     try:
-        # Lấy customer từ user đang đăng nhập
         customer = Customer.objects.get(user=request.user)
         print(customer)
         
-        # Lấy hoặc tạo giỏ hàng của user
         cart, created = Cart.objects.get_or_create(customer=customer)
         
         data = request.data
         product_id = data.get('product_id')
         quantity = data.get('quantity', 1)
         
-        # Kiểm tra product_id có được cung cấp hay không
         if not product_id:
-            return Response({'error': 'Products ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Products ID không được để trống'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Lấy sản phẩm dựa trên product_id
         product = get_object_or_404(Product, id=product_id)
         
-        # Kiểm tra xem sản phẩm đã có trong CartItem của giỏ hàng hay chưa
         cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product=product)
         
-        # Nếu item đã tồn tại, chỉ cập nhật số lượng
         if not item_created:
             cart_item.quantity += int(quantity)  # Cộng thêm số lượng mới vào số lượng hiện tại
         else:
@@ -364,18 +371,16 @@ def add_to_cart(request):
         # Lưu lại giỏ hàng nếu chưa lưu
         cart.save()
         
-        # Thêm sản phẩm vào danh sách products của Cart nếu chưa có
         if product not in cart.products.all():
             cart.products.add(product)
         
-        # Cập nhật tổng giá trị và số lượng sản phẩm trong giỏ
         cart.total_value = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart=cart))
         cart.quantity = cart.total_product_type()
         cart.save()
 
         # Trả về giỏ hàng đã cập nhật
         return Response({
-            'message': 'Product added to cart successfully',
+            'message': 'Thêm sản phẩm vào giỏ hàng thành công',
             'product': {
                 'name': product.name,
                 'quantity': cart_item.quantity
@@ -383,9 +388,113 @@ def add_to_cart(request):
         }, status=status.HTTP_200_OK)
 
     except Customer.DoesNotExist:
-        return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Khách hàng không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
     except Product.DoesNotExist:
-        return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Sản phẩm không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# xóa sản phẩm khỏi giỏ hàng
+# {
+#     "product_id": 123
+# }
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def remove_from_cart(request):
+    try:
+        customer = Customer.objects.get(user=request.user)
+
+        cart = get_object_or_404(Cart, customer=customer)
+
+        data = request.data
+        product_id = data.get('product_id')
+
+        if not product_id:
+            return Response({'error': 'Products ID không được để trống'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Lấy sản phẩm dựa trên product_id
+        product = get_object_or_404(Product, id=product_id)
+
+        # Kiểm tra xem sản phẩm có trong giỏ hàng hay không
+        cart_item = CartItem.objects.filter(cart=cart, product=product).first()
+        if not cart_item:
+            return Response({'error': 'Không có sản phẩm nào trong giỏ hàng'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Xóa sản phẩm khỏi CartItem
+        cart_item.delete()
+
+        # Xóa sản phẩm khỏi danh sách products của giỏ hàng nếu tồn tại
+        if product in cart.products.all():
+            cart.products.remove(product)
+
+        # Cập nhật tổng giá trị và số lượng sản phẩm trong giỏ
+        cart.total_value = sum(item.quantity * item.product.price for item in CartItem.objects.filter(cart=cart))
+        cart.quantity = cart.total_product_type()
+        cart.save()
+
+        # Trả về thông báo thành công
+        return Response({
+            'message': 'Xóa sản phẩm khỏi giỏ hàng thành công',
+            'product': {
+                'name': product.name
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Customer.DoesNotExist:
+        return Response({'error': 'Khách hàng không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+    except Product.DoesNotExist:
+        return Response({'error': 'Sản phẩm không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
+# thay đổi số lượng của sản phẩm trong giỏ hàng
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_product_quantity(request):
+    try:
+        customer = Customer.objects.get(user = request.user)
+        
+        cart = get_object_or_404(Cart, customer=customer)
+
+
+        data = request.data
+        product_id = data.get('product_id')
+        new_quantity = data.get('quantity')
+
+        if not product_id or not new_quantity:
+            return Response({'error': 'Products ID và số lượng không được để trống'}, status=status.HTTP_400_BAD_REQUEST)
+
+        product = get_object_or_404(Product, id=product_id)
+
+        # Kiểm tra xem sản phẩm có trong giỏ hàng hay không
+        cart_item = CartItem.objects.filter(cart=cart, product=product).first()
+        if not cart_item:
+            return Response({'error': 'Không có sản phẩm nào trong giỏ hàng'}, status=status.HTTP_404_NOT_FOUND)
+
+        if cart_item:
+            # Cập nhật số lượng mới cho mục giỏ hàng
+            cart_item.quantity = int(new_quantity)
+            cart_item.save()
+
+            
+            total_product_type = cart.total_product_type()
+
+            return Response({
+                'message': 'Số lượng sản phẩm đã được thay đổi thành công',
+                'total_book_type': total_product_type,
+                'product': {
+                    'name': product.name,
+                    'quantity': cart_item.quantity
+                }
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Giỏ hàng không có sản phẩm'}, status=status.HTTP_404_NOT_FOUND)
+
+    except Customer.DoesNotExist:
+        return Response({'error': 'Khách hàng không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+    except Product.DoesNotExist:
+        return Response({'error': 'Sản phẩm không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
