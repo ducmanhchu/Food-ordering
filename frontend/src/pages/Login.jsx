@@ -5,6 +5,7 @@ import { useState } from "react"
 import Logo from "../assets/Logo.svg"
 import "../components/Custom.css"
 import userApi from '../api/user'
+import LoginImage from '../assets/LoginImage.jpeg'
 
 function Login() {
     const [email, setEmail] = useState('')
@@ -69,7 +70,7 @@ function Login() {
                     <div className="row p-3">
                         <div className="col-md-5 d-flex align-items-center">
                             <img
-                                src="login.jpg"
+                                src={LoginImage}
                                 className="ms-5"
                                 style={{ width: "85%" }}
                             ></img>
