@@ -1,45 +1,44 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext } from "react";
+import { useEffect } from "react";
 
+import dishesApi from "../api/dishes";
+
+// Đảm bảo hiển thị số loại sản phẩm đang có trong giỏ hàng
+
+// Tạo Context
 const CartContext = createContext();
 
-export function CartProvider({ children }) {
-    const [cart, setCart] = useState([]);
+// Provider để bao bọc các component cần dùng context
+export const CartProvider = ({ children }) => {
+    const [cartCount, setCartCount] = useState(0);
 
-    const addToCart = (product) => {
-        setCart((prevCart) => {
-            const existingProduct = prevCart.find((item) => item.id === product.id);
-            if (existingProduct) {
-                return prevCart.map((item) =>
-                    item.id === product.id
-                        ? { ...item, quantity: item.quantity + product.quantity, total: item.total + product.price * product.quantity }
-                        : item
-                );
-            } else {
-                return [...prevCart, { ...product, total: product.price * product.quantity }];
+    // Lấy số lượng loại sản phẩm hiện có trong giỏ hàng
+    useEffect(() => {
+        const fetchCart = async() => {
+            try {
+                const dishCount = await dishesApi.customerCart()
+                setCartCount(dishCount.carts[0].quantity)
+            } catch(err) {
+                console.log("Lỗi khi lấy dữ liệu giỏ hàng trong context", err)
+                setCartCount(0)
             }
-        });
-    };
+        }
+        fetchCart()
+    }, [])
 
-    const removeFromCart = (id) => {
-        setCart((prevCart) => prevCart.filter((item) => item.id !== id));
-    };
 
-    const updateQuantity = (id, quantity) => {
-        setCart((prevCart) =>
-            prevCart.map((item) =>
-                item.id === id ? { ...item, quantity, total: item.price * quantity } : item
-            )
-        );
+    const updateCartCount = (newCount) => {
+        setCartCount(newCount); 
     };
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity }}>
+        <CartContext.Provider value={{ cartCount, updateCartCount }}>
             {children}
         </CartContext.Provider>
     );
-}
+};
 
-// Hook để sử dụng giỏ hàng
-export function useCart() {
+// Hook để dễ dàng sử dụng CartContext
+export const useCart = () => {
     return useContext(CartContext);
-}
+};

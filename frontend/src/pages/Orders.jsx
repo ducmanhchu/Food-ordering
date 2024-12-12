@@ -6,6 +6,7 @@ import Footer from "../components/Footer"
 import React, { useState, useEffect } from "react";
 // import orderApi from "./api/orderApi"; // Import the API
 import orderApi from "../api/order";
+import '../components/Custom.css'
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -82,17 +83,12 @@ const Orders = () => {
                   </div>
 
                   <div className="text-end mt-3">
-                    <button className="btn btn-danger" style={{ marginRight: "5px" }}>
+                    <button className="btn me-2 rounded-pill rButtonHover">
                       Hủy đơn
                     </button>
                     <Link
                       to="/orderdetail"
-                      className="btn"
-                      style={{
-                        backgroundColor: "#000066",
-                        color: "#fff",
-                        textDecoration: "none",
-                      }}
+                      className="btn rounded-pill buttonHover"
                     >
                       Chi tiết
                     </Link>
