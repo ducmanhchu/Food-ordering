@@ -199,7 +199,7 @@ class Product(models.Model):
             return 0
     status_view.short_description = 'Trạng thái'
     
-    
+        
 class Discount(models.Model):
     id = models.AutoField(primary_key=True)
     description = models.TextField(null=True, blank=True)
@@ -281,6 +281,7 @@ class Order(models.Model):
             return 0
     status_view.short_description = 'Status'
     
+
     
 class OrderItem(models.Model):
     id = models.AutoField(primary_key=True)
@@ -299,11 +300,11 @@ class OrderItem(models.Model):
     def save(self, *args, **kwargs):
         self.total_value = self.product.price * self.quantity
         super().save(*args, **kwargs)
-        # orderitem = OrderItem.objects.filter(order=self.order)
-        # # print("cartitem: ", cartitem.count())
-        # order = Order.objects.get(id = self.order.id)
-        # order.tongtien += self.total_value
-        # order.save()
+        if self.order.status == 'Hoàn thành':
+            product = Product.objects.get(id=self.product.id)
+            product.sold += self.quantity
+            product.save()
+            
     
 class Cart(models.Model):
     id = models.AutoField(primary_key=True)
