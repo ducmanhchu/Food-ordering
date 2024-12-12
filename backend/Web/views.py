@@ -187,7 +187,6 @@ def customer_orders(request):
     
 # Tạo mới đơn hàng
 # {
-#   "customer": 1,
 #   "payment_method": 1,
 #   "discount": null,
 #   "products": [
@@ -280,6 +279,7 @@ def create_order(request):
             status='Chờ xác nhận',
             payment_method=payment
         )
+    
 
     # Tạo OrderItem cho từng sản phẩm và liên kết với Order
     for item in order_items:
@@ -289,6 +289,8 @@ def create_order(request):
             quantity=item['quantity'],
             total_value=item['total_value']
         )
+        if item['product'] not in order.products.all():
+            order.products.add(item['product'])
 
     # Serialize dữ liệu đơn hàng
     serializer = OrderSerializer(order)
@@ -304,12 +306,49 @@ def cancel_order(request, pk):
         if order.customer.user != request.user:
             return Response({'error': 'Bạn không có quyền hủy đơn hàng này.'}, status=status.HTTP_403_FORBIDDEN)
         if order.status != 'Chờ xác nhận':
-            return Response({'error': 'Đơn hàng không thể hủy bây gi��.'}, status=status.HTTP_400_BAD_REQUEST)
-        order.status = 'Đã hủy'
+            return Response({'error': 'Đơn hàng không thể hủy bây giờ.'}, status=status.HTTP_400_BAD_REQUEST)
+        order.status = 'Hủy'
         order.save()
         return Response({'message': 'Đơn hàng đã hủy thành công.'}, status=status.HTTP_200_OK)
     except Order.DoesNotExist:
         return Response({'error': 'Đơn hàng không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
+    except AttributeError:
+        return Response(
+            {"detail": "Không tìm thấy thông tin khách hàng."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+# đánh giá sản phẩm
+# {
+#     "product_id": 1,
+#     "rating": 5
+# }
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rate_product(request, pk):
+    try:
+        order = Order.objects.get(pk=pk)
+        if order.customer.user!= request.user:
+            return Response({'error': 'Bạn không có quyền đánh giá đơn hàng này.'}, status=status.HTTP_403_FORBIDDEN)
+        if order.status!= 'Hoàn thành':
+            return Response({'error': 'Đơn hàng không thể đánh giá bây giờ.'}, status=status.HTTP_400_BAD_REQUEST)
+        product_id = request.data.get('product_id')
+        product = Product.objects.get(id=product_id)
+        rating = request.data.get('rating')
+        
+        if rating < 1 or rating > 5:
+            return Response({'error': 'Đánh giá phải trong khoảng từ 1 đến 5.'}, status=status.HTTP_400_BAD_REQUEST)
+        orderitem = OrderItem.objects.get(order=order, product=product)
+        orderitem.rating = rating
+        orderitem.save()
+        
+        return Response({'message': 'Đánh giá đã thành công.'}, status=status.HTTP_200_OK)
+    except Order.DoesNotExist:
+        return Response({'error': 'Đơn hàng không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
+    except Product.DoesNotExist:
+        return Response({'error': 'Sản phẩm không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
+    except OrderItem.DoesNotExist:
+        return Response({'error': 'Đơn hàng hoặc sản phẩm không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
     except AttributeError:
         return Response(
             {"detail": "Không tìm thấy thông tin khách hàng."},
@@ -332,6 +371,8 @@ def customer_cart(request):
         serializer = CartSerializer(cart, many=True)
         
         return Response({"carts": serializer.data}, status=status.HTTP_200_OK)
+    except Customer.DoesNotExist:
+        return Response({'error': f'Người dùng {request.user} không có giỏ hàng'}, status=status.HTTP_400_BAD_REQUEST)
     except AttributeError:
         return Response(
             {"detail": "Không tìm thấy thông tin khách hàng."},
