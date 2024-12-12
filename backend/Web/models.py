@@ -19,7 +19,7 @@ class UserAccountManager(BaseUserManager):
         if role in ['employee', 'manager']:
             user.is_staff = True
         else:
-            user.is_staff = True
+            user.is_staff = False
         # user.is_staff = True
         user.save(using=self._db)
         return user
@@ -84,7 +84,7 @@ class User(AbstractBaseUser, PermissionsMixin):  # AbstractUser đã tích hợp
         if self.role in ['employee', 'manager']:
             self.is_staff = True
         else:
-            self.is_staff = True
+            self.is_staff = False
         super(User, self).save(*args, **kwargs)
         r = self.role
         # print(r)
