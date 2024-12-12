@@ -1,4 +1,4 @@
-import { Breadcrumb, Container, Col, Row } from 'react-bootstrap'
+import { Breadcrumb, Container, Col, Row, Toast, ToastContainer } from 'react-bootstrap'
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 
@@ -14,6 +14,9 @@ function DishDetail() {
     const {id} = useParams()
     const [dish, setDish] = useState(null)
     const [quantity, setQuantity] = useState(1)
+    const [error, setError] = useState('')
+    // Hiển thị thông báo thêm giỏ hàng thành công
+    const [show, setShow] = useState(false)
 
     // Lấy dữ liệu
     useEffect(() => {
@@ -37,6 +40,25 @@ function DishDetail() {
         if (quantity > 1) {
             const newQuantity = quantity - 1
             setQuantity(newQuantity)
+        }
+    }
+
+    const addToCart = async(e) => {
+        e.preventDefault()
+        try {
+            const addReponse = await dishesApi.addToCart(id, quantity) || []
+
+            console.log("addRes:", addReponse)
+            if (addReponse) {
+                setShow(!show)
+            }
+        } catch (error) {
+            console.log("Lỗi khi thêm sản phẩm vào giỏ hàng", error)
+            if (error.response) {
+                setError(error.response.data.detail || 'Thêm vào giỏ hàng không thành công!')
+            } else {
+                setError('Vui lòng đăng nhập!')
+            }
         }
     }
 
@@ -86,20 +108,25 @@ function DishDetail() {
                                 dish && dish.status === 'tạm ngưng'  ? (
                                     <button disabled
                                         type="button" className="btn rounded-pill ms-3 px-5 pb-2 buttonHover"
-                                        
                                     >
                                         Thêm vào giỏ hàng
                                     </button>
                             ) : (
                                     <button
                                         type="button" className="btn rounded-pill ms-3 px-5 pb-2 buttonHover"
-                                        
+                                        onClick={addToCart}
                                     >
                                         Thêm vào giỏ hàng
                                     </button>
                             )
                         }
                         </div>
+                        {error && <p className="text-danger mt-2">{error}</p>}
+                        <ToastContainer className="mt-3" position="top-center">
+                            <Toast className="bg-success text-white text-center" onClose={() => setShow(false)} delay={2000} show={show} autohide>
+                                <Toast.Body>Thêm thành công!</Toast.Body>
+                            </Toast>    
+                        </ToastContainer>
                     </Col>                
                 </Row>
                 <p className='fs-4 fw-medium'>Đánh giá</p>
