@@ -19,7 +19,7 @@ class UserAccountManager(BaseUserManager):
         if role in ['employee', 'manager']:
             user.is_staff = True
         else:
-            user.is_staff = True
+            user.is_staff = False
         # user.is_staff = True
         user.save(using=self._db)
         return user
@@ -84,7 +84,7 @@ class User(AbstractBaseUser, PermissionsMixin):  # AbstractUser đã tích hợp
         if self.role in ['employee', 'manager']:
             self.is_staff = True
         else:
-            self.is_staff = True
+            self.is_staff = False
         super(User, self).save(*args, **kwargs)
         r = self.role
         # print(r)
@@ -178,7 +178,7 @@ class Product(models.Model):
     ]
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='còn hàng')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
-    rating = models.FloatField(null=True, default=0.0, blank=True)
+    rating = models.FloatField(null=True, blank=True)
     sold = models.IntegerField(null=True, default=10, blank=True)
     
     def __str__(self):
@@ -198,6 +198,16 @@ class Product(models.Model):
         except:
             return 0
     status_view.short_description = 'Trạng thái'
+    def save(self, *args, **kwargs):
+        ratings = OrderItem.objects.filter(product = self).exclude(rating__isnull=True).values_list('rating', flat=True)
+        if len(ratings):
+            mean_ratings = sum(ratings)/len(ratings)
+        else:
+            mean_ratings = None
+        self.rating = mean_ratings
+        self.sold = sum(OrderItem.objects.filter(product = self).values_list('quantity', flat=True))
+        super(Product, self).save(*args, **kwargs)
+                    
     
         
 class Discount(models.Model):
@@ -271,8 +281,11 @@ class Order(models.Model):
             elif self.status == 'Hoàn thành':
                 status_color= '#00FF00'
                 status = self.status
-            else:
+            elif self.status == 'Chờ xác nhận':
                 status_color= '#000000'
+                status = self.status
+            else:
+                status_color= '#FFC000'
                 status = self.status
 
             html= f'<span style="color: {status_color};">{status}</span>'
@@ -284,9 +297,17 @@ class Order(models.Model):
 
     
 class OrderItem(models.Model):
+    RATING_CHOICES = (
+        (1, '1'),
+        (2, '2'),
+        (3, '3'),
+        (4, '4'),
+        (5, '5'),
+    )
     id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    rating = models.PositiveIntegerField(choices=RATING_CHOICES, null=True, blank=True)
     quantity = models.PositiveSmallIntegerField(default=1)
     total_value = models.PositiveSmallIntegerField(default=0)
     
@@ -302,8 +323,10 @@ class OrderItem(models.Model):
         super().save(*args, **kwargs)
         if self.order.status == 'Hoàn thành':
             product = Product.objects.get(id=self.product.id)
-            product.sold += self.quantity
+            # product.sold = self.quantity
             product.save()
+            
+            
             
     
 class Cart(models.Model):
