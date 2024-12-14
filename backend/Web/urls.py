@@ -19,4 +19,7 @@ urlpatterns = [
     path('carts/add_to_cart/', add_to_cart, name='add_to_cart'),
     path('carts/remove_from_cart/', remove_from_cart, name='remove_from_cart'),
     path('carts/change_product_quantity/', change_product_quantity, name='change_product_quantity'),
+    path('business/', get_business_info, name='get_business_info'),
+    path('discount/', get_discount_codes, name='get_discount_codes'),
+    path('payment/', get_payment_methods, name='get_payment_methods'),
 ]

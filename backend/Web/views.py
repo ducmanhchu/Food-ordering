@@ -253,23 +253,22 @@ def create_order(request):
         })
 
     # Tạo đơn hàng
-    if discount != None:
-        if total_price >= discount.minimum:
-            total_price -= (discount.discountvalue * total_price) / 100
+    if discount != None and total_price >= discount.minimum:
+        total_price -= (discount.discountvalue * total_price) / 100
 
-            order = Order.objects.create(
-                customer=customer,
-                tongtien=total_price,
-                hovaten=data.get('hovaten', customer.user.username),
-                sdt=data.get('sdt', customer.user.phone_number),
-                email=data.get('email', customer.user.email),
-                diachi=data.get('diachi', customer.user.address),
-                status='Chờ xác nhận',
-                payment_method=payment,
-                discount=discount
-            )
+        order_new = Order.objects.create(
+            customer=customer,
+            tongtien=total_price,
+            hovaten=data.get('hovaten', customer.user.username),
+            sdt=data.get('sdt', customer.user.phone_number),
+            email=data.get('email', customer.user.email),
+            diachi=data.get('diachi', customer.user.address),
+            status='Chờ xác nhận',
+            payment_method=payment,
+            discount=discount
+        )
     else:
-        order = Order.objects.create(
+        order_new = Order.objects.create(
             customer=customer,
             tongtien=total_price,
             hovaten=data.get('hovaten', customer.user.username),
@@ -284,16 +283,16 @@ def create_order(request):
     # Tạo OrderItem cho từng sản phẩm và liên kết với Order
     for item in order_items:
         OrderItem.objects.create(
-            order=order,
+            order=order_new,
             product=item['product'],
             quantity=item['quantity'],
             total_value=item['total_value']
         )
-        if item['product'] not in order.products.all():
-            order.products.add(item['product'])
+        if item['product'] not in order_new.products.all():
+            order_new.products.add(item['product'])
 
     # Serialize dữ liệu đơn hàng
-    serializer = OrderSerializer(order)
+    serializer = OrderSerializer(order_new)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # hủy đơn hàng
@@ -335,14 +334,19 @@ def rate_product(request, pk):
         product_id = request.data.get('product_id')
         product = Product.objects.get(id=product_id)
         rating = request.data.get('rating')
-        
+        customer = Customer.objects.get(user = request.user)
         if rating < 1 or rating > 5:
             return Response({'error': 'Đánh giá phải trong khoảng từ 1 đến 5.'}, status=status.HTTP_400_BAD_REQUEST)
         orderitem = OrderItem.objects.get(order=order, product=product)
         orderitem.rating = rating
         orderitem.save()
         
-        return Response({'message': 'Đánh giá đã thành công.'}, status=status.HTTP_200_OK)
+        return Response({
+                    'message': 'Đánh giá đơn hàng thành công',
+                    'người đánh giá': customer.user.username,
+                    'sản phẩm' : product.id,
+                    'đánh giá' : rating
+                }, status=status.HTTP_200_OK)
     except Order.DoesNotExist:
         return Response({'error': 'Đơn hàng không tồn tại.'}, status=status.HTTP_404_NOT_FOUND)
     except Product.DoesNotExist:
@@ -537,5 +541,63 @@ def change_product_quantity(request):
         return Response({'error': 'Khách hàng không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
     except Product.DoesNotExist:
         return Response({'error': 'Sản phẩm không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# lấy ra thông tin doanh nghiệp
+
+@api_view(['GET'])
+def get_business_info(request):
+    try:
+        business = BusinessInfo.objects.all()[0]
+        return Response({
+            'name': business.name,
+            'address': business.address,
+            'phone': business.phone,
+            'zalo_link': business.zalo_link
+            }, status=status.HTTP_200_OK)
+    except BusinessInfo.DoesNotExist:
+        return Response({'error': 'Thông tin doanh nghiệp không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+# lấy ra danh sách mã giảm giá
+
+@api_view(['GET'])
+def get_discount_codes(request):
+    try:
+        discount_codes = Discount.objects.all()
+        return Response({
+            'discount_codes': [
+                {
+                    'description': code.description,
+                    'discountvalue': code.discountvalue,
+                    'minimum': code.minimum
+                    } for code in discount_codes
+        ]}, status=status.HTTP_200_OK)
+    except Discount.DoesNotExist:
+        return Response({'error': 'Danh sách mã giảm giá không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+# lấy ra các payment_method
+
+from django.conf import settings
+from django.core.files.storage import default_storage
+
+@api_view(['GET'])
+def get_payment_methods(request):
+    try:
+        payment_methods = PaymentMethod.objects.all()
+        return Response({
+            'payment_methods': [
+                {
+                    'methodname': method.methodname,
+                    'QRcode': method.QRcode.url if method.QRcode and default_storage.exists(method.QRcode.name) else None
+                } for method in payment_methods
+            ]
+        }, status=status.HTTP_200_OK)
+    except PaymentMethod.DoesNotExist:
+        return Response({'error': 'Danh sách các payment_method không tồn tại'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
