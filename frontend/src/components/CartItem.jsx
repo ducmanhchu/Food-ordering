@@ -16,7 +16,7 @@ function CartItem() {
             try {
                 const response = await dishesApi.customerCart()
                 setCart(response.carts[0].products || [])
-                console.log("cartRes:", response)
+                console.log("cartRes in cart:", response)
 
 
             } catch (err) {
@@ -110,8 +110,8 @@ function CartItem() {
                             </span>
                             <img 
                                 src={item.product.image}
-                                className='object-fit-scale mx-1' 
-                                style={{width: '50px', height: '50px'}}
+                                className='object-fit-scale mx-1 rounded' 
+                                style={{width: '2.5em'}}
                             />
                             <p className='fw-medium ms-2 pt-3' style={{fontSize: '14px'}}>{item.product.name}</p>
                             {item.quantity > 0 ? (

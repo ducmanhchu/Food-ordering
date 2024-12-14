@@ -5,7 +5,9 @@ import { useState } from "react"
 import Logo from "../assets/Logo.svg"
 import "../components/Custom.css"
 import userApi from '../api/user'
+import dishesApi from "../api/dishes"
 import LoginImage from '../assets/LoginImage.jpeg'
+import { useCart } from "../components/CartContext"
 
 function Login() {
     const [email, setEmail] = useState('')
@@ -13,6 +15,8 @@ function Login() {
     const [error, setError] = useState('')
     const navigate = useNavigate()
     const [show, setShow] = useState(false)
+    const { updateCartCount } = useCart()
+    const currentPath = sessionStorage.getItem("path-before-login") || '/'
 
     const handleLogin = async(e) => {
       e.preventDefault()
@@ -31,9 +35,18 @@ function Login() {
             localStorage.setItem('userID', response.userID);
 
             if (sessionStorage.getItem('access_token')) {
+                // Gọi API để lấy số lượng sản phẩm mới trong giỏ
+                const cartResponse = await dishesApi.customerCart()
+                // console.log("cusCartRes:", cartResponse)
+                const totalItems = cartResponse.carts[0].quantity
+
+                // Cập nhật số lượng giỏ hàng trong context
+                updateCartCount(totalItems)
+
                 setShow(true)
                 setTimeout(() => {
-                    navigate('/') // Chuyển hướng sang trang chủ sau 1 giây
+                    sessionStorage.removeItem("path-before-login")
+                    navigate(currentPath) // Chuyển hướng sang trang chủ sau 1 giây
                 }, 1000)  
           }
         } else throw new Error("Đăng nhập thất bại")
@@ -129,7 +142,7 @@ function Login() {
                 </div>
             </Container>
             <ToastContainer className="mt-3" position="top-center">
-                <Toast className="bg-success text-white text-center" onClose={() => setShow(false)} delay={800} show={show} autohide>
+                <Toast className="bg-success text-white text-center fw-medium" onClose={() => setShow(false)} delay={800} show={show} autohide>
                     <Toast.Body>Đăng nhập thành công!</Toast.Body>
                 </Toast>    
             </ToastContainer>

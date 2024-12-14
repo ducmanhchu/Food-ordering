@@ -10,12 +10,17 @@ const CartContext = createContext();
 
 // Provider để bao bọc các component cần dùng context
 export const CartProvider = ({ children }) => {
+    const [isLoggedIn, setIsLoggedIn] = useState(!!sessionStorage.getItem('access_token'));
     const [cartCount, setCartCount] = useState(0);
 
     // Lấy số lượng loại sản phẩm hiện có trong giỏ hàng
     useEffect(() => {
         const fetchCart = async() => {
             try {
+                if (!isLoggedIn) {
+                    console.log("Hãy đăng nhập để có thể sử dụng giỏ hàng")
+                    return
+                }
                 const dishCount = await dishesApi.customerCart()
                 setCartCount(dishCount.carts[0].quantity)
             } catch(err) {
