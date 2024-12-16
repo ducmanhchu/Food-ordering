@@ -6,6 +6,10 @@ const orderApi = {
     const url = `/tlu/orders`; // Replace with the actual endpoint for fetching user orders
     return axiosClient.get(url);
   },
+  getDiscount() {
+    const url = `tlu/discount/`
+    return axiosClient.get(url)
+  }
 };
 
 export default orderApi;

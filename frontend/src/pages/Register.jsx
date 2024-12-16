@@ -21,6 +21,7 @@ function Register() {
             const response = await userApi.register(username, email, password) || []
 
             if (response && response.message) {
+                
                 setShow(true)
                 setTimeout(() => {
                     navigate('/login')
@@ -101,7 +102,7 @@ function Register() {
             </div>
             </Container>
             <ToastContainer className="mt-3" position="top-center">
-                <Toast className="bg-success text-white text-center" onClose={() => setShow(false)} delay={800} show={show} autohide>
+                <Toast className="bg-success text-white text-center fw-medium" onClose={() => setShow(false)} delay={800} show={show} autohide>
                     <Toast.Body>Đăng ký thành công!</Toast.Body>
                 </Toast>    
             </ToastContainer>

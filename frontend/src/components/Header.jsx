@@ -1,4 +1,4 @@
-import { Navbar, Container, Form, InputGroup, Offcanvas, Dropdown, Button, Toast, ToastContainer, ListGroup } from 'react-bootstrap'
+import { Navbar, Container, Form, InputGroup, Offcanvas, Dropdown, Toast, ToastContainer, ListGroup } from 'react-bootstrap'
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
@@ -25,10 +25,12 @@ function Header() {
     // Xử lý khi đã đăng nhập
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const userName = sessionStorage.getItem('username')
-    const navigate = useNavigate()
     // Số lượng sản phẩm trong giỏ
     const { cartCount } = useCart()
-    // console.log("So luong san pham trong gio:", cartCount)
+    const { updateCartCount } = useCart()
+    // Lưu đường dẫn hiện tại để hỗ trợ việc đăng nhập
+    const currentPath = window.location.pathname; // Lấy đường dẫn hiện tại
+    sessionStorage.setItem("path-before-login", currentPath);
 
 
     // Kiểm tra trạng thái đăng nhập
@@ -38,20 +40,38 @@ function Header() {
     }, [])
 
     // Xử lý đăng xuất
-    const handleLogout = () => {
-        sessionStorage.clear() // Xóa tất cả thông tin trong sessionStorage
-        localStorage.clear()
-        setIsLoggedIn(false) // Cập nhật trạng thái
-        setShowLogout(true)
-        navigate('/')
-    }
+    const handleLogout = async (e) => {
+        e.preventDefault();
+    
+        if (!window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+            return;
+        }
+    
+        try {
+            // Xóa tất cả thông tin đăng nhập
+            sessionStorage.clear();
+            localStorage.clear();
+    
+            // Cập nhật giỏ hàng về 0 sau khi đăng xuất
+            updateCartCount(0);
+    
+            // Cập nhật trạng thái đăng xuất
+            setIsLoggedIn(false);
+            setShowLogout(true);
+        } catch (error) {
+            console.error('Lỗi trong quá trình đăng xuất:', error);
+            alert('Đã xảy ra lỗi khi đăng xuất. Vui lòng thử lại!');
+        }
+    };
 
     const handleClose = () => setShowOffcanvas(false)
     const handleShow = () => {
         if (isCheckout) {
             setShowCheckout(true)
-        } else {
+        } else if (isLoggedIn) {
             setShowOffcanvas(true);
+        } else {
+            alert("Vui lòng đăng nhập trước!")
         }
     }
 
@@ -82,7 +102,7 @@ function Header() {
     }
 
     // Ẩn phần tìm kiếm sau khi người dùng chọn một món ăn trong phần tìm kiếm này
-    const handleSelectDish = (dishId, dishName) => {
+    const handleSelectDish = () => {
         setSearchQuery('')
         setFilteredDishes([])
     }
@@ -221,12 +241,12 @@ function Header() {
             </Offcanvas>
 
             <ToastContainer className="mt-3" position="top-center">
-                <Toast className="bg-warning-subtle text-center" onClose={() => setShowCheckout(false)} delay={3000} show={showCheckout} autohide>
+                <Toast className="bg-warning-subtle text-center fw-medium" onClose={() => setShowCheckout(false)} delay={3000} show={showCheckout} autohide>
                     <Toast.Body>Hãy hoàn thành việc thanh toán!</Toast.Body>
                 </Toast>    
             </ToastContainer>
             <ToastContainer className="mt-3" position="top-center">
-                <Toast className="bg-success-subtle text-center" onClose={() => setShowLogout(false)} delay={2500} show={showLogout} autohide>
+                <Toast className="bg-success-subtle text-center fw-medium" onClose={() => setShowLogout(false)} delay={2500} show={showLogout} autohide>
                     <Toast.Body>Đăng xuất thành công!</Toast.Body>
                 </Toast>    
             </ToastContainer>
