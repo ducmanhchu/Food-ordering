@@ -1,5 +1,5 @@
-import { Container, Form, Button } from "react-bootstrap"
-import { Link } from "react-router-dom"
+import { Container, Form, Button, Toast, ToastContainer } from "react-bootstrap"
+import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 
 import Header from "../components/Header"
@@ -14,10 +14,25 @@ import orderApi from "../api/order"
 function Checkout() {
     const [cart, setCart] = useState([])
     const [coupon, setCoupon] = useState([])
-    const { updateCartCount } = useCart()
-    const [selectedCoupon, setSelectedCoupon] = useState([])
     const [discount, setDiscount] = useState(0)
     const [total, setTotal] = useState(0)
+    const [payment, setPayment] = useState([])
+    const [error, setError] = useState('')
+    const [showMessage, setShowMessage] = useState(false)
+    const [showCoupon, setShowCoupon] = useState(false)
+    const [showMinimum, setShowMinimum] = useState(false)
+    const { updateCartCount } = useCart()
+    const navigate = useNavigate()
+    // Lưu trữ giá trị mã giảm giá, phương thức thanh toán mà người dùng chọn
+    const [selectedCoupon, setSelectedCoupon] = useState([])
+    const [selectedPayment, setSelectedPayment] = useState([])
+    // Lấy thông tin giao hàng
+    const [customerInfo, setCustomerInfo] = useState({
+        hovaten: "",
+        sdt: "",
+        email: "",
+        diachi: ""
+    });
 
     // Lấy dữ liệu giỏ hàng
     useEffect(() => {
@@ -25,11 +40,32 @@ function Checkout() {
             try {
                 const response = await dishesApi.customerCart() || []
                 const couponRes = await orderApi.getDiscount() || []
+                const paymentRes = await orderApi.getPaymentMethod() || []
                 setCart(response.carts[0].products || [])
                 setCoupon(couponRes.discount_codes)
+                setPayment(paymentRes.payment_methods)
                 setTotal(response.carts[0].total_value)
-                console.log("coupon:", couponRes.discount_codes)
-                console.log("cartRes in checkout:", response.carts[0].products)
+                // console.log("Payment:", paymentRes.payment_methods)
+                // console.log("coupon:", couponRes.discount_codes)
+                // console.log("cartRes in checkout:", response.carts[0].products)
+
+                // Cập nhật giá trị mặc định cho phương thức thanh toán và mã giảm giá
+                if (paymentRes.payment_methods.length > 0) {
+                    setSelectedPayment([
+                        paymentRes.payment_methods[0].id,
+                        paymentRes.payment_methods[0].methodname,
+                        paymentRes.payment_methods[0].QRcode
+                    ])
+                }
+
+                if (couponRes.discount_codes.length > 0) {
+                    setSelectedCoupon([
+                        couponRes.discount_codes[0].id,
+                        couponRes.discount_codes[0].discountvalue,
+                        couponRes.discount_codes[0].minimum
+                    ])
+                }
+
             } catch (err) {
                 console.log("Không thể tải giỏ hàng:", err)
             }
@@ -37,25 +73,72 @@ function Checkout() {
         fetchCart()
     }, [])
     
-    console.log("Total:", total)
+    // console.log("Total:", total)
 
     // Hàm xử lý khi chọn mã giảm giá
-    const handleSelectChange = (event) => {
+    const handleCouponSelected = (event) => {
         const selectedValue = event.target.value.split(',')
-        const discountValue = parseFloat(selectedValue[0])
-        const minimumOrder = parseFloat(selectedValue[1])
-        setSelectedCoupon([discountValue, minimumOrder])
+        const couponId = parseFloat(selectedValue[0])
+        const discountValue = parseFloat(selectedValue[1])
+        const minimumOrder = parseFloat(selectedValue[2])
+        setSelectedCoupon([couponId, discountValue, minimumOrder])
+        // console.log("selectedCoupon:", selectedCoupon)
+    };
+
+    const handlePaymentSelected = (event) => {
+        const selectedValue = event.target.value.split(',')
+        const paymentId = parseFloat(selectedValue[0])
+        setSelectedPayment([paymentId, selectedValue[1], selectedValue[2]])
+        // console.log("Payment select:", selectedPayment)
+    }
+
+    // Hàm cập nhật thông tin khi người dùng nhập liệu
+    const handleInfoChange = (e) => {
+        const { name, value } = e.target;
+        setCustomerInfo({
+            ...customerInfo,
+            [name]: value
+        });
     };
 
     const handleCouponUsing = () => {
         // Nếu tổng giá trị đơn hàng > giá trị tối thiểu của mã giảm giá
         if (total >= selectedCoupon[1]) {
             setDiscount((selectedCoupon[0] / 100) * total)
-            alert(`Áp dụng mã giảm giá thành công! Bạn được giảm ${((selectedCoupon[0] / 100) * total).toLocaleString()} VND!`)
+            setShowCoupon(true)
             return 
         } else {
-            alert(`Đơn hàng của bạn không đạt đủ giá trị tối thiểu ${selectedCoupon[1].toLocaleString()} VND!`)
+            setShowMinimum(true)
             return 
+        }
+    }
+    
+
+    // console.log("Input:", selectedPayment[0], selectedCoupon[0], cart, total + 25000 - discount, customerInfo)
+    const handleOrdering = async(e) => {
+        e.preventDefault()
+        try {
+            const orderingRes = await orderApi.createOrder(selectedPayment[0], selectedCoupon[0], cart, total + 25000 - discount, customerInfo)
+            console.log("Ordering Res:", orderingRes)
+            if (orderingRes && orderingRes.created_at) {
+                // Xóa tất cả các sản phẩm trong giỏ hàng sau khi đặt hàng thành công
+                const removePromises = cart.map(item => {
+                    return dishesApi.removeCartItem(item.product.id)  // Gọi API xóa sản phẩm khỏi giỏ hàng
+                })
+
+                // Chờ tất cả các yêu cầu xóa sản phẩm hoàn tất
+                await Promise.all(removePromises)
+
+                // Cập nhật số lượng trong giỏ hàng
+                updateCartCount(0)
+                setShowMessage(true)
+                setTimeout(() => {
+                    navigate('/')
+                }, 1000)
+            }
+        } catch (err) {
+            console.log("Lỗi khi đặt hàng", err)
+            setError("Có lỗi khi đặt hàng!")
         }
     }
 
@@ -80,28 +163,34 @@ function Checkout() {
                                     <div className="col">
                                         <Form.Label htmlFor="name">Họ và tên</Form.Label>
                                         <Form.Control
-                                            type="email"
-                                            id="name"
+                                            type="text"
+                                            name="hovaten"
                                             placeholder='Nhập họ và tên người nhận'
                                             className='mb-2'
+                                            value={customerInfo.hovaten}
+                                            onChange={handleInfoChange}
                                         />
                                     </div>
                                     <div className="col">
                                         <Form.Label htmlFor="sdt">SĐT</Form.Label>
                                         <Form.Control
-                                            type="email"
-                                            id="sdt"
+                                            type="text" 
+                                            name="sdt" 
                                             placeholder='Nhập SĐT người nhận'
                                             className='mb-2'
+                                            value={customerInfo.sdt}
+                                            onChange={handleInfoChange}
                                         />
                                     </div>
                                 </div>
                                 <Form.Label htmlFor="address">Giao tới</Form.Label>
                                 <Form.Control
-                                    type="email"
-                                    id="address"
+                                    type="text" 
+                                    name="diachi" 
                                     placeholder='Nhập địa chỉ người nhận'
                                     className='mb-2'
+                                    value={customerInfo.diachi}
+                                    onChange={handleInfoChange}
                                 />
                             </div>
                             {/* Tóm tắt đơn hàng */}
@@ -132,16 +221,21 @@ function Checkout() {
                             <div className="px-3 py-3 border-bottom">
                                 <p className="fs-5 fw-medium">Phương thức và khuyến mãi</p>
                                 <Form.Label>Phương thức thanh toán</Form.Label>
-                                <Form.Select defaultValue="Chọn phương thức thanh toán" className="mb-4">
-                                    <option>Thanh toán khi nhận hàng</option>
-                                    <option>Qua ví điện tử</option>
+                                <Form.Select defaultValue="Chọn phương thức thanh toán" className="mb-4" onChange={handlePaymentSelected}>
+                                    {payment.length > 0 ? (
+                                        payment.map((item, index) => (
+                                            <option key={index} value={[item.id, item.methodname, item.QRcode]}>{item.methodname}</option>
+                                        ))
+                                    ) : (
+                                        <option>None</option>
+                                    )}
                                 </Form.Select>
                                 <Form.Label htmlFor="coupon">Mã giảm giá</Form.Label>
                                 <div className="d-flex justify-content-between">
-                                    <Form.Select defaultValue="Chọn mã giảm giá" onChange={handleSelectChange}>
+                                    <Form.Select defaultValue="Chọn mã giảm giá" onChange={handleCouponSelected}>
                                         {coupon.length > 0 ? (
                                             coupon.map((item, index) => (
-                                                <option key={index} value={[item.discountvalue, item.minimum]}>{item.description}</option>
+                                                <option key={index} value={[item.id, item.discountvalue, item.minimum]}>{item.description}</option>
                                             ))
                                         ) : (
                                             <option className="text-secondary">Không có mã giảm giá</option>
@@ -190,10 +284,14 @@ function Checkout() {
                                         />
                                     </span>
                                 </p>
+                                
+                                {error && <div className="alert alert-danger">{error}</div>}
+
                                 <div className="d-flex justify-content-end">
                                     <Button
                                         className="mt-4 buttonHover rounded-pill"
                                         style={{width: '150px'}}
+                                        onClick={handleOrdering}
                                     >
                                         Đặt hàng
                                     </Button>
@@ -203,6 +301,23 @@ function Checkout() {
                     </div>
                 </div>
             </Container>
+            <ToastContainer className="mt-3 position-fixed" position="top-center">
+                <Toast className="bg-success text-white text-center fw-medium" onClose={() => setShowMessage(false)} delay={800} show={showMessage} autohide>
+                    <Toast.Body>Đặt hàng thành công!</Toast.Body>
+                </Toast>    
+            </ToastContainer>
+            
+            <ToastContainer className="mt-3 position-fixed" position="top-center">
+                <Toast className="bg-success text-white text-center fw-medium" onClose={() => setShowCoupon(false)} delay={3000} show={showCoupon} autohide>
+                    <Toast.Body>Áp dụng mã giảm giá thành công!</Toast.Body>
+                </Toast>    
+            </ToastContainer>
+
+            <ToastContainer className="mt-3 position-fixed" position="top-center">
+                <Toast className="bg-danger text-white text-center fw-medium" onClose={() => setShowMinimum(false)} delay={3000} show={showMinimum} autohide>
+                    <Toast.Body>Đơn hàng của bạn không đủ giá trị tối thiểu!</Toast.Body>
+                </Toast>    
+            </ToastContainer>
 
             <Footer />
         </>

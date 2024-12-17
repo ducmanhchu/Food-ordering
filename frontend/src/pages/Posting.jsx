@@ -15,7 +15,7 @@ function Posting() {
     const navigate = useNavigate(); 
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [showAlert, setShowAlert] = useState(false)
-    const [showMessage, setShowMessage] = useState(false)
+    const [showMessage, setShowMessage] = useState(false)   
 
     // Kiểm tra xem đã đăng nhập chưa
     useEffect(() => {

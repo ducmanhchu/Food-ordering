@@ -185,115 +185,142 @@ def customer_orders(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-# Tạo mới đơn hàng
+# Tạo mới đơn hàng (Đã sửa lại cách đọc thông tin)
 # {
-#   "payment_method": 1,
-#   "discount": null,
-#   "products": [
-#     { "id": 1, "quantity": 2 },
-#     { "id": 2, "quantity": 3 }
-#   ]
+#     "products": [
+#         {"product": {"id": 1}, "quantity": 2},
+#         {"product": {"id": 2}, "quantity": 1}
+#     ],
+#     "payment_method": 1,
+#     "discount": 3,   (Có thể NULL)
+#     "total_price": 85000,
+#     "hovaten": "Nguyen Van A",    (Có thể NULL)
+#     "sdt": "0123456789",  (Có thể NULL)
+#     "email": "example@gmail.com", (Có thể NULL)
+#     "diachi": "123 ABC Street"    (Có thể NULL)
 # }
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_order(request):
-    # Lấy thông tin khách hàng
-    customer = Customer.objects.filter(user=request.user).first()
-    if not customer:
-        return Response({'error': 'Người dùng không phải là khách hàng.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    data = request.data
-    products_data = data.get('products', [])  # Danh sách sản phẩm bao gồm {id, quantity}
-    payment_method_id = data.get('payment_method')
-    
-    # lấy mã giảm giá
-    if 'discount' in data:
-        discount_id = data.get('discount')
-        try:
-            discount = Discount.objects.get(id=discount_id)
-        except Discount.DoesNotExist:
-            return Response({'error': f'Mã giảm giá với ID {discount_id} không tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        discount = None
-
-
-    # Kiểm tra phương thức thanh toán
     try:
-        payment = PaymentMethod.objects.get(id=payment_method_id)
-    except PaymentMethod.DoesNotExist:
-        return Response({'error': 'Phương thức thanh toán không hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Lấy thông tin khách hàng
+        customer = Customer.objects.filter(user=request.user).first()
+        if not customer:
+            return Response({'error': 'Người dùng không phải là khách hàng.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Kiểm tra danh sách sản phẩm
-    if not products_data:
-        return Response({'error': 'Danh sách sản phẩm không được để trống.'}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
+        products_data = data.get('products', [])  # Danh sách sản phẩm bao gồm {id, quantity}
+        payment_method_id = data.get('payment_method')
+        total_price = data.get('total_price')
+        customer_info = data.get('customerInfo', {})  # Lấy thông tin khách hàng
+        
+        # lấy mã giảm giá
+        if 'discount' in data:
+            discount_id = data.get('discount')
+            try:
+                discount = Discount.objects.get(id=discount_id)
+            except Discount.DoesNotExist:
+                return Response({'error': f'Mã giảm giá với ID {discount_id} không tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            discount = None
 
-    total_price = 0.0
-    order_items = []
 
-    # Duyệt qua danh sách sản phẩm để tính tổng giá và tạo danh sách tạm cho OrderItem
-    for item_data in products_data:
-        product_id = item_data.get('id')
-        quantity = item_data.get('quantity', 1)
-
+        # Kiểm tra phương thức thanh toán
         try:
-            product = Product.objects.get(id=product_id)
-        except Product.DoesNotExist:
-            return Response({'error': f'Sản phẩm với ID {product_id} không tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+            payment = PaymentMethod.objects.get(id=payment_method_id)
+        except PaymentMethod.DoesNotExist:
+            return Response({'error': 'Phương thức thanh toán không hợp lệ.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Tính tổng giá trị
-        total_price += product.price * quantity
-        
-        
-        # Lưu OrderItem vào danh sách tạm
-        order_items.append({
-            'product': product,
-            'quantity': quantity,
-            'total_value': product.price * quantity
-        })
+        # Kiểm tra danh sách sản phẩm
+        if not products_data:
+            return Response({'error': 'Danh sách sản phẩm không được để trống.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Tạo đơn hàng
-    if discount != None and total_price >= discount.minimum:
-        total_price -= (discount.discountvalue * total_price) / 100
+        # total_price = 0.0
+        order_items = []
 
+        # Duyệt qua danh sách sản phẩm để tính tổng giá và tạo danh sách tạm cho OrderItem
+        for item_data in products_data:
+            # Lấy thông tin sản phẩm và số lượng từ dữ liệu gửi lên
+            product_data = item_data.get('product')
+            if not product_data:
+                return Response({'error': 'Thiếu thông tin sản phẩm.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            product_id = product_data.get('id')
+            quantity = item_data.get('quantity', 1)
+
+            # Kiểm tra xem product_id có hợp lệ không
+            if not product_id:
+                return Response({'error': 'Sản phẩm không có ID.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                product = Product.objects.get(id=product_id)
+            except Product.DoesNotExist:
+                return Response({'error': f'Sản phẩm với ID {product_id} không tồn tại.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Tính tổng giá trị
+            # total_price += product.price * quantity
+            
+            
+            # Lưu OrderItem vào danh sách tạm
+            order_items.append({
+                'product': product,
+                'quantity': quantity,
+                'total_value': product.price * quantity
+            })
+
+         # Trích xuất thông tin từ customerInfo
+        hoVaTen = customer_info.get('hovaten')
+        SDT = customer_info.get('sdt')
+        diaChi = customer_info.get('diachi')
+
+        # Tạo đơn hàng
         order_new = Order.objects.create(
             customer=customer,
             tongtien=total_price,
-            hovaten=data.get('hovaten', customer.user.username),
-            sdt=data.get('sdt', customer.user.phone_number),
+            hovaten = hoVaTen,
+            sdt = SDT,
             email=data.get('email', customer.user.email),
-            diachi=data.get('diachi', customer.user.address),
+            diachi = diaChi,
             status='Chờ xác nhận',
             payment_method=payment,
             discount=discount
         )
-    else:
-        order_new = Order.objects.create(
-            customer=customer,
-            tongtien=total_price,
-            hovaten=data.get('hovaten', customer.user.username),
-            sdt=data.get('sdt', customer.user.phone_number),
-            email=data.get('email', customer.user.email),
-            diachi=data.get('diachi', customer.user.address),
-            status='Chờ xác nhận',
-            payment_method=payment
-        )
-    
 
-    # Tạo OrderItem cho từng sản phẩm và liên kết với Order
-    for item in order_items:
-        OrderItem.objects.create(
-            order=order_new,
-            product=item['product'],
-            quantity=item['quantity'],
-            total_value=item['total_value']
-        )
-        if item['product'] not in order_new.products.all():
-            order_new.products.add(item['product'])
+        # if discount != None and total_price >= discount.minimum:
+        #     total_price -= (discount.discountvalue * total_price) / 100
 
-    # Serialize dữ liệu đơn hàng
-    serializer = OrderSerializer(order_new)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # else:
+        #     order_new = Order.objects.create(
+        #         customer=customer,
+        #         tongtien=total_price,
+        #         hovaten=data.get('hovaten', customer.user.username),
+        #         sdt=data.get('sdt', customer.user.phone_number),
+        #         email=data.get('email', customer.user.email),
+        #         diachi=data.get('diachi', customer.user.address),
+        #         status='Chờ xác nhận',
+        #         payment_method=payment
+        #     )
+        
+
+        # Tạo OrderItem cho từng sản phẩm và liên kết với Order
+        for item in order_items:
+            OrderItem.objects.create(
+                order=order_new,
+                product=item['product'],
+                quantity=item['quantity'],
+                total_value=item['total_value']
+            )
+            if item['product'] not in order_new.products.all():
+                order_new.products.add(item['product'])
+
+        # Serialize dữ liệu đơn hàng
+        serializer = OrderSerializer(order_new)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        # Trả về lỗi chi tiết cho frontend
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # hủy đơn hàng
 
@@ -562,7 +589,7 @@ def get_business_info(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 # lấy ra danh sách mã giảm giá
-
+# Trả về cả id
 @api_view(['GET'])
 def get_discount_codes(request):
     try:
@@ -570,6 +597,7 @@ def get_discount_codes(request):
         return Response({
             'discount_codes': [
                 {
+                    'id':code.id,
                     'description': code.description,
                     'discountvalue': code.discountvalue,
                     'minimum': code.minimum
@@ -592,6 +620,7 @@ def get_payment_methods(request):
         return Response({
             'payment_methods': [
                 {
+                    'id' : method.id,
                     'methodname': method.methodname,
                     'QRcode': method.QRcode.url if method.QRcode and default_storage.exists(method.QRcode.name) else None
                 } for method in payment_methods
