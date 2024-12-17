@@ -42,6 +42,11 @@ function Header() {
     // Xử lý đăng xuất
     const handleLogout = async (e) => {
         e.preventDefault();
+
+        if (isCheckout) {
+            setShowCheckout(true)
+            return
+        }
     
         if (!window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
             return;
@@ -240,13 +245,13 @@ function Header() {
                 <CartItem />
             </Offcanvas>
 
-            <ToastContainer className="mt-3" position="top-center">
-                <Toast className="bg-warning-subtle text-center fw-medium" onClose={() => setShowCheckout(false)} delay={3000} show={showCheckout} autohide>
+            <ToastContainer className="mt-3 position-fixed" position="top-center">
+                <Toast className="bg-danger text-white text-center fw-medium" onClose={() => setShowCheckout(false)} delay={3000} show={showCheckout} autohide>
                     <Toast.Body>Hãy hoàn thành việc thanh toán!</Toast.Body>
                 </Toast>    
             </ToastContainer>
-            <ToastContainer className="mt-3" position="top-center">
-                <Toast className="bg-success-subtle text-center fw-medium" onClose={() => setShowLogout(false)} delay={2500} show={showLogout} autohide>
+            <ToastContainer className="mt-3 position-fixed" position="top-center">
+                <Toast className="bg-danger text-white text-center fw-medium" onClose={() => setShowLogout(false)} delay={2500} show={showLogout} autohide>
                     <Toast.Body>Đăng xuất thành công!</Toast.Body>
                 </Toast>    
             </ToastContainer>

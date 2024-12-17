@@ -262,10 +262,16 @@ class Order(models.Model):
         return self.tracking_number
     
     def save(self, *args, **kwargs):
-        self.hovaten = self.customer.user.username
-        self.sdt = self.customer.user.phone_number
-        self.email = self.customer.user.email
-        self.diachi = self.customer.user.address
+        # Chỉ gán giá trị mặc định nếu không có thông tin từ customerInfo
+        if not self.hovaten:
+            self.hovaten = self.customer.user.username
+        if not self.sdt:
+            self.sdt = self.customer.user.phone_number
+        if not self.email:
+            self.email = self.customer.user.email
+        if not self.diachi:
+            self.diachi = self.customer.user.address
+
         if not self.tracking_number:
             self.tracking_number = self.generate_tracking_number()
         super().save(*args, **kwargs)
@@ -326,9 +332,7 @@ class OrderItem(models.Model):
             # product.sold = self.quantity
             product.save()
             
-            
-            
-    
+                
 class Cart(models.Model):
     id = models.AutoField(primary_key=True)
     customer = models.OneToOneField(Customer, on_delete=models.CASCADE)
