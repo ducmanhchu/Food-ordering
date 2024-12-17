@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
-import { Button, Offcanvas } from "react-bootstrap"
+import { useNavigate } from "react-router-dom"
+import { Button, Offcanvas, Toast, ToastContainer } from "react-bootstrap"
 
 import Currency from "./Currency"
 import dishesApi from "../api/dishes"
@@ -9,6 +9,8 @@ import { useCart } from "./CartContext"
 function CartItem() {
     const [cart, setCart] = useState([])
     const { updateCartCount } = useCart()
+    const [showToast, setShowToast] = useState(false)
+    const navigate = useNavigate()
 
     // Lấy dữ liệu giỏ hàng
     useEffect(() => {
@@ -96,6 +98,14 @@ function CartItem() {
         }
     };
     
+    const handleCheckout = () => {
+        if (cart.length <= 0) {
+          // Nếu giỏ hàng trống, hiển thị Toast
+          setShowToast(true);
+        } else {
+          navigate("/checkout/")
+        }
+      };
 
     return (
         <>
@@ -136,12 +146,15 @@ function CartItem() {
                     <p className=''>Tổng cộng</p>
                     <p><Currency amount={cart.reduce((total, item) => total + item.quantity * item.product.price, 0)}/></p>
                 </div>
-                <Link to='/checkout'>
-                    <Button className='buttonHover rounded-pill' style={{width: '100%'}}>
-                        Thanh toán
-                    </Button>
-                </Link>
+                <Button className='buttonHover rounded-pill' style={{width: '100%'}} onClick={handleCheckout}>
+                    Thanh toán
+                </Button>
             </div>
+            <ToastContainer className="mt-3 me-3 position-fixed" position="top-end">
+                <Toast className="bg-danger text-white text-center fw-medium" onClose={() => setShowToast(false)} delay={2500} show={showToast} autohide>
+                    <Toast.Body>Giỏ hàng trống!</Toast.Body>
+                </Toast>    
+            </ToastContainer>
         </>
     )
 }

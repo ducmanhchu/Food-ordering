@@ -103,8 +103,8 @@ function Checkout() {
 
     const handleCouponUsing = () => {
         // Nếu tổng giá trị đơn hàng > giá trị tối thiểu của mã giảm giá
-        if (total >= selectedCoupon[1]) {
-            setDiscount((selectedCoupon[0] / 100) * total)
+        if (total >= selectedCoupon[2]) {
+            setDiscount((selectedCoupon[1] / 100) * total)
             setShowCoupon(true)
             return 
         } else {

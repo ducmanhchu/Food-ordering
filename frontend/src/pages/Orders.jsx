@@ -1,37 +1,56 @@
-import { Container,Navbar } from "react-bootstrap"
+import { Container, Navbar, Toast, ToastContainer } from "react-bootstrap"
 import { Link } from "react-router-dom"
 import Header from "../components/Header"
 import Footer from "../components/Footer"
 
 import React, { useState, useEffect } from "react";
-// import orderApi from "./api/orderApi"; // Import the API
 import orderApi from "../api/order";
 import '../components/Custom.css'
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState('success');
 
   useEffect(() => {
     // Fetch the orders when the component mounts
     const fetchOrders = async () => {
       try {
         const response = await orderApi.getUserOrders();
-        console.log(response.orders)
+        console.log("My OrderRes:", response.orders)
         setOrders(response.orders); // Assuming response contains an 'orders' array
       } catch (err) {
-        setError("Failed to fetch orders");
-      } finally {
-        setLoading(false);
+        console.log("Lỗi khi lấy dữ liệu đơn hàng", err)
       }
     };
 
     fetchOrders();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  const handleCancelOrder = async (orderId) => {
+    try {
+      const cancelResponse = await orderApi.cancelOrder(orderId)
+      console.log("Cancel:", cancelResponse)
+      // Cập nhật trạng thái đơn hàng trong state sau khi hủy
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? { ...order, status: 'Hủy' } : order
+        )
+      )
+
+      // Hiển thị thông báo thành công
+      setToastMessage("Đơn hàng đã hủy thành công.");
+      setToastVariant("success");
+      setShowToast(true);
+    } catch (err) {
+      console.log("Lỗi khi hủy đơn:", err)
+      setToastMessage("Không thể hủy đơn hàng!");
+      setToastVariant("danger");
+      setShowToast(true);
+    }
+  }
+
     return (
         <>
             <Header />
@@ -54,51 +73,66 @@ const Orders = () => {
         ) : (
           orders.map((order) => (
             <div className="my-4" key={order.id}>
-              <div className="card">
+              <div className="card cardHover">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-center mb-3 border-bottom">
-                    <h6>Mã đơn hàng: <span className="text-secondary">{order.tracking_number}</span></h6>
-                    <h6>Trạng thái: <span className="text-primary">{order.status}</span></h6>
+                    <p>Mã vận hàng: <span className="text-secondary fw-medium">{order.tracking_number}</span></p>
+                    {order && order.status == "Chờ xác nhận" ? (
+                      <p>Trạng thái: <span className="text-primary fw-medium">{order.status}</span></p>
+                    ) : order && order.status == "Đang chuẩn bị" ? (
+                      <p>Trạng thái: <span className="text-warning fw-medium">{order.status}</span></p>
+                    ) : order && order.status == "Đang giao" ? (
+                      <p>Trạng thái: <span className="text-warning-emphasis fw-medium">{order.status}</span></p>
+                    ) : order && order.status == "Hoàn thành" ? (
+                      <p>Trạng thái: <span className="text-success fw-medium">{order.status}</span></p>
+                    ) : (
+                      <p>Trạng thái: <span className="text-danger fw-medium">{order.status}</span></p>
+                    )}
                   </div>
 
                   <ul className="list-group list-group-flush mb-3 border-bottom">
-                  {order.products.map((productItem, index) => (
-                      <li
-                        className="d-flex justify-content-between mb-3"
-                        key={`${order.id}-product-${index}`}
-                      >
-                        <span>{productItem.product.name}</span>
-                        <span>x{productItem.quantity}</span>
-                      </li>
+                    {order.products.map((productItem, index) => (
+                        <li
+                          className="d-flex justify-content-between mb-3"
+                          key={`${order.id}-product-${index}`}
+                        >
+                          <span className="fw-medium" style={{fontSize: "17px"}}>{productItem.product.name}</span>
+                          <span className="fw-medium">x{productItem.quantity}</span>
+                        </li>
                     ))}
                   </ul>
-
                   <div className="d-flex justify-content-between align-items-center">
-                    <p className="fw-bold">
+                    <p>
                       Thành tiền:{" "}
                       <span className="fw-bold" style={{ color: "#000066" }}>
                         {order.tongtien.toLocaleString()}đ
                       </span>
                     </p>
                   </div>
-
                   <div className="text-end mt-3">
-                    <button className="btn me-2 rounded-pill rButtonHover">
+                    <button className="btn me-2 rounded-pill rButtonHover" onClick={() => handleCancelOrder(order.id)}>
                       Hủy đơn
                     </button>
                     <Link
-                      to="/orderdetail"
+                      to={"/order-detail/" + order.id}
                       className="btn rounded-pill buttonHover"
                     >
                       Chi tiết
                     </Link>
                   </div>
+
                 </div>
               </div>
             </div>
           ))
         )}
-      </Container>
+
+        <ToastContainer className="mt-3 position-fixed" position="top-center">
+          <Toast className="text-white text-center fw-medium" show={showToast} onClose={() => setShowToast(false)} bg={toastVariant} delay={2000} autohide>
+            <Toast.Body>{toastMessage}</Toast.Body>
+          </Toast>
+        </ToastContainer>
+      </Container>      
 
       <Footer />
     </>
