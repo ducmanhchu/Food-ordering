@@ -49,7 +49,6 @@ function Footer() {
                             
                         </div>
                         <div className="col-md-4">
-                            <div> gghhjj</div>
                         <p>Copyright © Thang Long University</p>
                         </div>
                     </div>

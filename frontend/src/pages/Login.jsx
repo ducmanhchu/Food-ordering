@@ -5,7 +5,6 @@ import { useState } from "react"
 import Logo from "../assets/Logo.svg"
 import "../components/Custom.css"
 import userApi from '../api/user'
-import LoginImage from '../assets/LoginImage.jpeg'
 
 function Login() {
     const [email, setEmail] = useState('')
@@ -64,16 +63,12 @@ function Login() {
             </div>
             <Container>
                 <div
-                    className="bg-white mt-5 rounded"
+                    className=" mt-5 rounded"
                     style={{ width: "100%", height: "50%" }}
                 >
-                    <div className="row p-3">
-                        <div className="col-md-5 d-flex align-items-center">
-                            <img
-                                src={LoginImage}
-                                className="ms-5"
-                                style={{ width: "85%" }}
-                            ></img>
+                    <div className="row p-3" style={{backgroundImage:"url('LoginImageFull.jpeg')",backgroundSize:"cover"}}>
+                        
+                        <div className="col-md-5 gap-2 d-flex">
                         </div>
                         <div className="col-md-7 justify-content-center">
                             <div

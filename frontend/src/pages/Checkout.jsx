@@ -87,13 +87,11 @@ function Checkout() {
                                 </Form.Select>
                                 <Form.Label htmlFor="coupon">Mã giảm giá</Form.Label>
                                 <div className="d-flex justify-content-between">
-                                    <Form.Control
-                                        type="email"
-                                        id="coupon"
-                                        placeholder='Nhập mã giảm giá'
-                                        className='mb-2'
-                                        style={{width: '650px'}}
-                                    />
+                                <Form.Select defaultValue="Chọn mã giảm giágiá" className="mb-4">
+                                    <option>TLU25</option>
+                                    <option>TLU10</option>
+                                </Form.Select>
+                                   
                                     <Button
                                         variant="dark"
                                         className='blButtonHover rounded-pill'

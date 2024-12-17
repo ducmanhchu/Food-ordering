@@ -46,9 +46,9 @@ function Register() {
             </div>
             <Container>
             <div className="bg-white mt-5 rounded" style={{width:"100%",height:"50%"}}>
-                <div className="row">
+                <div className="row "style={{backgroundImage:"url('LoginImageFull.jpeg')",backgroundSize:"cover"}}>
                     <div className='col-md-5 d-flex align-items-center'>
-                        <img src='login.jpg' className='ms-5' style={{width:"85%"}}></img>
+                        
                     </div>
                     <div className="col-md-7">
                         <div className='p-5' style={{width:"85%",marginTop:"75px"}}>
