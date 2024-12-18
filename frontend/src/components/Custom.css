@@ -43,6 +43,18 @@
     border-color: red;
 }
 
+.yButtonHover {
+    color: white;
+    background-color: rgb(187, 187, 37);
+    transition: background-color 0.3s ease;
+    border-color: rgb(187, 187, 37);
+}
+.yButtonHover:hover {
+    background-color: white;
+    color: rgb(187, 187, 37);
+    border-color: rgb(187, 187, 37);
+}
+
 .iconHover {
     display: inline-block;
     transition: filter 0.3s ease;

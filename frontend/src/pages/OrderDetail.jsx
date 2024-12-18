@@ -1,10 +1,38 @@
 import { Container, Navbar } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import orderApi from "../api/order";
+import Currency from "../components/Currency";
+import "../components/Custom.css"
 
 function OrderDetail() {
+  const {id} = useParams()
+  const [order, setOrder] = useState(null)
+
+  // Lấy dữ liệu đơn hàng
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await orderApi.getUserOrders();
+        // console.log("All Orders:", response.orders)
+        
+        // Lọc ra đơn hàng có id trùng với id từ URL
+        const foundOrder = response.orders.find(order => order.id === parseInt(id))
+        console.log("This order:", foundOrder)
+        setOrder(foundOrder)
+         
+      } catch (err) {
+        console.log("Lỗi khi lấy dữ liệu đơn hàng", err)
+      }
+    };
+
+    fetchOrders();
+  }, [id]);
+
+
   return (
     <>
       <Header />
@@ -41,73 +69,58 @@ function OrderDetail() {
             </ol>
           </nav>
         </Navbar>
-
-        <h1 className="mb-3">Chi tiết đơn hàng</h1>
+        
+        <h2 className="mb-3">Chi tiết đơn hàng</h2>
         <div className="bg-white rounded px-4 py-3 mb-5">
-          <h5 className="border-bottom mb-3 pb-3">Chuẩn bị đơn hàng</h5>
-          <p className="fw-bold text-secondary mb-2">Từ</p>
-          <p className="fw-bold mb-2">Đồ ăn | TLU FOOD</p>
+          <div className="d-flex border-bottom mb-3 pb-1">
+            <h5 className="me-auto">Thông tin</h5>
+            {order && order.status == "Chờ xác nhận" ? (
+              <p className="align-self-center">Trạng thái: <span className="text-primary fw-medium">{order && order.status}</span></p>
+            ) : order && order.status == "Đang chuẩn bị" ? (
+              <p className="align-self-center">Trạng thái: <span className="text-warning fw-medium">{order && order.status}</span></p>
+            ) : order && order.status == "Đang giao" ? (
+              <p className="align-self-center">Trạng thái: <span className="text-warning-emphasis fw-medium">{order && order.status}</span></p>
+            ) : order && order.status == "Hoàn thành" ? (
+              <p className="align-self-center">Trạng thái: <span className="text-success fw-medium">{order && order.status}</span></p>
+            ) : (
+              <p className="align-self-center">Trạng thái: <span className="text-danger fw-medium">{order && order.status}</span></p>
+            )}
+          </div>
+          <p>Mã vận đơn:<span className="mx-2 text-secondary fw-medium">{order && order.tracking_number}</span></p>
+          <div className="d-flex">
+            <p className="me-2">Họ và tên:</p>
+            <p className="fw-medium me-5">{order && order.hovaten}</p>
+            <p className="me-2">SĐT:</p>
+            <p className="fw-medium">{order && order.sdt}</p>
+          </div>
+          <p className="text-secondary mb-2">Từ</p>
+          <p className="fw-medium mb-2">Đồ ăn | TLU FOOD</p>
           <p className="text-secondary mb-3">
             [Trường đại học Thăng Long] Nghiêm Xuân Yêm - P.Đại Kim, Hoàng Mai,
             Hà Nội
           </p>
-          <p className="fw-bold text-secondary mb-2">Đến</p>
-          <p className="fw-bold border-bottom mb-3 pb-3">250 Kim Giang</p>
+          <p className="text-secondary mb-2">Đến</p>
+          <p className="fw-medium border-bottom mb-3 pb-3">{order ? order.diachi : "None"}</p>
           <h5 className="mb-4">Chi tiết đơn hàng</h5>
-          <div className="row mb-3">
-            <div className="col-md-10">
-              <img src="anh1.jpg" style={{ width: "50px" }}></img>
-              <span> x1</span>
-              <span> Cơm tấm Sài Gòn</span>
-            </div>
-            <div className="col-md-2">
-              <p>50.000</p>
-            </div>
+          <div className="mb-3 border-bottom">
+            {order && order.products.map((item, index) => (
+              <div className="d-flex mb-3" key={index}>
+                <img className="rounded me-3 align-self-center" src={item.product.image} style={{ width: "3rem" }}></img>
+                <span className="me-2 align-self-center" style={{fontSize: "1.15rem"}}>x{item.quantity}</span>
+                <span className="me-auto align-self-center" style={{fontSize: "1.15rem"}}>{item.product.name}</span>
+                <p className="align-self-center"><Currency amount={item.product.price} fontSize={15} /></p>
+              </div>
+            ))}
           </div>
-          <div className="row mb-3">
-            <div className="col-md-10">
-              <img src="anh2.jpg" style={{ width: "50px" }}></img>
-              <span> x1</span>
-              <span> Nem nướng Nha Trang</span>
-            </div>
-            <div className="col-md-2">
-              <p>50.000</p>
-            </div>
-          </div>
-          <div className="d-flex mb-3 gap-3">
-            <div className="col-md-10">
-              <h5>Tổng (2 món)</h5>
-              <p>Phí giao hàng</p>
-              <p>Giảm giá</p>
-            </div>
-            <div className="col-md-2">
-              <p className="fw-bold">100.000</p>
-              <p>10.000</p>
-              <p>-10.000</p>
-              <h5 className="mt-3">100.000</h5>
-            </div>
-          </div>
-          <div className="d-flex mb-3 text-secondary gap-3">
-            <div className="col-md-10">
-              <p>Ghi chú</p>
-              <p>Mã đơn hàng</p>
-              <p>Thanh toán</p>
-            </div>
-            <div className="col-md-2">
-              <p>Không có</p>
-              <p>123456789</p>
-              <p>Thanh toán khi nhận hàng</p>
-            </div>
+          <h5>Chi tiết thanh toán</h5>
+          <div className="d-flex mb-3">
+            <p className="my-1 me-auto align-self-center">Tổng tiền</p>
+            <p>{order ? <Currency amount={order.tongtien} fontSize={20}/> : 0}</p>
           </div>
           <div className="d-grid d-md-flex justify-content-md-end">
             <Link
               to="/orders"
-              className="btn"
-              style={{
-                backgroundColor: "#000066",
-                color: "#fff",
-                textDecoration: "none",
-              }}
+              className="btn buttonHover rounded-pill"
             >
               Quay lại
             </Link>

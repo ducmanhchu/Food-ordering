@@ -86,7 +86,7 @@ function DishDetail() {
                     </Breadcrumb.Item>
                 </Breadcrumb>
 
-                <Row className='border-bottom pb-3 mb-4'>
+                <Row className='pb-3 mb-4'>
                     <Col>
                         <img 
                             src={dish?.image || 'https://placehold.co/320x200?text=Loading...'} 
@@ -140,16 +140,9 @@ function DishDetail() {
                         </ToastContainer>
                     </Col>                
                 </Row>
-                <p className='fs-4 fw-medium'>Đánh giá</p>
                 
             </Container>
-                <Container className='d-flex flex-wrap'>
-                    <Review />
-                    <Review />
-                    <Review />
-                    <Review />
-                    <Review />
-                </Container>
+                
             <Footer />
         </>
     )

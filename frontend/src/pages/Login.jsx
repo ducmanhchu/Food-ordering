@@ -46,7 +46,7 @@ function Login() {
                 setShow(true)
                 setTimeout(() => {
                     sessionStorage.removeItem("path-before-login")
-                    navigate(currentPath) // Chuyển hướng sang trang chủ sau 1 giây
+                    navigate(currentPath) // Chuyển hướng về trang trước đó sau 1 giây
                 }, 1000)  
           }
         } else throw new Error("Đăng nhập thất bại")

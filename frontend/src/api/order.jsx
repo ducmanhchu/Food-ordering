@@ -31,6 +31,15 @@ const orderApi = {
         };
         return axiosClient.post(url, data).then((response) => response);
     },
+    cancelOrder(pk) {
+        const url = `/tlu/orders/${pk}/cancel/`
+        return axiosClient.put(url).then(response => response)
+    },
+    rateDish(pk, product_id, rating) {
+        const url = `tlu/orders/${pk}/rate_product`
+        const data = {product_id, rating}
+        return axiosClient.post(url, data).then(response => response)
+    }
 };
 
 export default orderApi;

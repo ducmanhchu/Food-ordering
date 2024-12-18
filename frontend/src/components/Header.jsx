@@ -22,6 +22,7 @@ function Header() {
     const [dishes, setDishes] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [filteredDishes, setFilteredDishes] = useState([])
+    const navigate = useNavigate()
     // Xử lý khi đã đăng nhập
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const userName = sessionStorage.getItem('username')
@@ -63,6 +64,9 @@ function Header() {
             // Cập nhật trạng thái đăng xuất
             setIsLoggedIn(false);
             setShowLogout(true);
+            setTimeout(() => {
+                navigate('/') // Chuyển hướng sang trang chủ sau 1 giây
+            }, 1000)  
         } catch (error) {
             console.error('Lỗi trong quá trình đăng xuất:', error);
             alert('Đã xảy ra lỗi khi đăng xuất. Vui lòng thử lại!');
