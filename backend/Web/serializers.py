@@ -20,12 +20,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['username', 'password', 'email']
 
-    # def validate(self, data):
-    #     # Đảm bảo rằng người đăng ký chỉ được phép là customer
-    #     if 'role' in data and data['role'] != 'customer':
-    #         raise serializers.ValidationError("Chỉ khách hàng được phép đăng ký tài khoản.")
-    #     return data
-
     def create(self, validated_data):
         # Tạo người dùng mới với vai trò mặc định là 'customer'
         user = User.objects.create_user(
@@ -36,6 +30,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.role = 'customer'  # Gán vai trò mặc định
         user.save()
         return user
+    
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'phone_number', 'address']
     
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:

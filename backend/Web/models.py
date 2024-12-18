@@ -223,7 +223,7 @@ class PaymentMethod(models.Model):
     id = models.AutoField(primary_key=True)
     METHOD_CHOICES = [
         ('COD', 'COD'),
-        ('MOMO', 'MOMO'),
+        ('QRPay', 'QRPay'),
     ]
     methodname = models.CharField(max_length=20, choices=METHOD_CHOICES, default='COD')
     QRcode = models.FileField(null=True, blank=True)

@@ -7,6 +7,7 @@ urlpatterns = [
     path('products/', get_products, name='products'),
     path('categories/', get_categories, name='categories'),
     path('products/<int:pk>/', product_detail, name='product_detail'),
+    path('user-info/', userInfo, name='user-info'),
 
     path('categories/create/', create_category, name='create_category'),
     path('categories/<int:pk>/update/', update_category, name='update_category'),

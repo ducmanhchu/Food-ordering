@@ -1,14 +1,14 @@
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
 function Star(props){
-    if (props.st < 0) {
-        return null
-    }
+    // Làm tròn xuống và giới hạn số sao trong khoảng 0-5
+    const fullStars = Math.floor(Math.max(0, Math.min(5, props.st))); // Số sao vàng
+    const emptyStars = 5 - fullStars; // Số sao trống
 
     return (
         <span>
             {/* Render sao vàng */}
-            {[...Array(props.st)].map((_, i) => (
+            {[...Array(fullStars)].map((_, i) => (
                 <i 
                     key={`filled-${i}`} 
                     className="text-warning bi bi-star-fill" 
@@ -17,7 +17,7 @@ function Star(props){
             ))}
 
             {/* Render sao trống */}
-            {[...Array(5 - props.st)].map((_, i) => (
+            {[...Array(emptyStars)].map((_, i) => (
                 <i 
                     key={`empty-${i}`} 
                     className="bi bi-star-fill" 

@@ -50,6 +50,14 @@ def login(request):
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Xem thông tin người dùng
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def userInfo(request):
+    user = request.user  
+    serializer = UserSerializer(user)  
+    return Response(serializer.data)
+
 
 @api_view(['POST'])
 def register(request):

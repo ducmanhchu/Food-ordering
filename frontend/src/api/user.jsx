@@ -11,6 +11,10 @@ const userApi = {
         const data = { username, email, password }
         return axiosClient.post(url, data).then(response => response)
     },
+    userInfo() {
+        const url = `/tlu/user-info/`
+        return axiosClient.get(url).then(response => response)
+    },
 }
 
 export default userApi

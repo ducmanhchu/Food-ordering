@@ -1,4 +1,4 @@
-import { Container, Form, Button, Toast, ToastContainer } from "react-bootstrap"
+import { Container, Form, Button, Toast, ToastContainer, Modal } from "react-bootstrap"
 import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 
@@ -6,6 +6,7 @@ import Header from "../components/Header"
 import Footer from "../components/Footer"
 import Back from '../assets/Back.svg'
 import Currency from "../components/Currency"
+import QRPay from '../assets/QRPay.jpeg'
 import '../components/Custom.css'
 import { useCart } from "../components/CartContext"
 import dishesApi from "../api/dishes"
@@ -21,6 +22,7 @@ function Checkout() {
     const [showMessage, setShowMessage] = useState(false)
     const [showCoupon, setShowCoupon] = useState(false)
     const [showMinimum, setShowMinimum] = useState(false)
+    const [showModal, setShowModal] = useState(false)
     const { updateCartCount } = useCart()
     const navigate = useNavigate()
     // Lưu trữ giá trị mã giảm giá, phương thức thanh toán mà người dùng chọn
@@ -114,7 +116,7 @@ function Checkout() {
     }
     
 
-    // console.log("Input:", selectedPayment[0], selectedCoupon[0], cart, total + 25000 - discount, customerInfo)
+    console.log("Input:", selectedPayment[0], selectedCoupon[0], cart, total + 25000 - discount, customerInfo)
     const handleOrdering = async(e) => {
         e.preventDefault()
         try {
@@ -131,15 +133,27 @@ function Checkout() {
 
                 // Cập nhật số lượng trong giỏ hàng
                 updateCartCount(0)
-                setShowMessage(true)
-                setTimeout(() => {
-                    navigate('/')
-                }, 1000)
+                if (selectedPayment[0] == 2) {
+                    setShowModal(true)
+                } else {   
+                    setShowMessage(true)
+                    setTimeout(() => {
+                        navigate('/')
+                    }, 1000)
+                }
             }
         } catch (err) {
             console.log("Lỗi khi đặt hàng", err)
             setError("Có lỗi khi đặt hàng!")
         }
+    }
+
+    const handleClose = () => {
+        setShowModal(false)
+        setShowMessage(true)
+        setTimeout(() => {
+            navigate('/')
+        }, 1000)
     }
 
     return (
@@ -318,6 +332,25 @@ function Checkout() {
                     <Toast.Body>Đơn hàng của bạn không đủ giá trị tối thiểu!</Toast.Body>
                 </Toast>    
             </ToastContainer>
+
+            <Modal
+                show={showModal}
+                onHide={handleClose}
+                backdrop="static"
+                keyboard={false}
+            >
+                <Modal.Header closeButton>
+                <Modal.Title>Thanh toán qua mã QR</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-center">
+                    <img src={QRPay} alt="QRPay" width="400rem"/>
+                </Modal.Body>
+                <Modal.Footer>
+                <Button className="btn rounded-pill buttonHover" onClick={handleClose}>
+                    Hoàn thành
+                </Button>
+                </Modal.Footer>
+            </Modal>
 
             <Footer />
         </>
