@@ -7,7 +7,8 @@ import Footer from "../components/Footer"
 import postsApi from '../api/posts'
 import Favorite from '../assets/Favorite.svg'
 import Favorited from '../assets/Favorited.svg'
-import Comment from '../components/Comment'
+// import Comment from '../components/Comment'
+import CommentOfPost from '../components/CommentOfPost'
 import '../components/Custom.css'
 
 function PostDetail() {
@@ -131,6 +132,15 @@ function PostDetail() {
                                 <Link to={'/blog'} className='text-secondary text-decoration-none'>Quay lại</Link>
                             </div>
                             <h3 className='mb-3'>{post ? post.title : "Đang tải..."}</h3>
+                             {/* Hiển thị ảnh nếu có */}
+                             {post && post.image && (
+                                <img 
+                                    src={`http://localhost:8000${post.image}`} 
+                                    alt={post.title} 
+                                    className="img-fluid mb-3" 
+                                    style={{ maxHeight: '400px', objectFit: 'cover' }}
+                                />
+                            )}
                             <p style={{ whiteSpace: "pre-wrap" }}>{post ? post.content : "Đang tải..."}</p>
                         </div>
                     </div>
@@ -176,7 +186,7 @@ function PostDetail() {
                                     <p className="text-center text-secondary">Chưa có bình luận!</p>
                                 ) : (
                                     currentComment.map((comment) => (   
-                                        <Comment key={comment.id} data={comment}/>
+                                        <CommentOfPost key={comment.id} data={comment}/>
                                     ))
                                 )}
                             </div>

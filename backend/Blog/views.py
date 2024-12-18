@@ -4,6 +4,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
 from .models import Post, Comment
 from Web.models import User
@@ -65,7 +66,9 @@ def post_detail(request, pk):
         if post.author != request.user and not request.user.is_staff:
             return Response({'error': 'You do not have permission to edit this post.'}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = PostSerializer(post, data=request.data)
+        parser_classes = [MultiPartParser, FormParser]
+        # serializer = PostSerializer(post, data=request.data)
+        serializer = PostSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -166,4 +169,18 @@ def my_posts(request):
     
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)    
+
+# danh sách comments của user
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_comments(request):
+    # Lấy thông tin người dùng đang đăng nhập
+    user = request.user
+    
+    # Lọc các comments theo tác giả
+    comments = Comment.objects.filter(author=user).order_by('-created_at') 
+    
+    serializer = CommentSerializer(comments, many=True)
+    return Response(serializer.data)
 

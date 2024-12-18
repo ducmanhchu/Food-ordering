@@ -18,8 +18,10 @@ function Dish({ data }) {
                             </Card.Title>
                             <Card.Text>
                                 <span className="d-flex">
-                                    <Star st={item.rating} />
-                                    <span className='ms-2 text-secondary'>{item.rating}/5</span>
+                                    {/* <Star st={item.rating} />
+                                    <span className='ms-2 text-secondary'>{item.rating}/5</span> */}
+                                    <Star st={item.rating ?? 0} />
+                                    <span className='ms-2 text-secondary'>{item.rating ?? 0}/5</span>
                                     {
                                         item.status == 'còn hàng' ? (
                                             <span></span>

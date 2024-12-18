@@ -73,6 +73,7 @@ function Header() {
         }
     };
 
+
     const handleClose = () => setShowOffcanvas(false)
     const handleShow = () => {
         if (isCheckout) {
@@ -222,6 +223,11 @@ function Header() {
                                         <Dropdown.Item>
                                             <Link to="/my-posts " className="text-decoration-none text-black">
                                                 Bài viết của tôi
+                                            </Link>
+                                        </Dropdown.Item>
+                                        <Dropdown.Item>
+                                            <Link to="/my-comments " className="text-decoration-none text-black">
+                                                Bình luận của tôi
                                             </Link>
                                         </Dropdown.Item>
                                         <Dropdown.Item onClick={handleLogout} className="text-decoration-none text-black">

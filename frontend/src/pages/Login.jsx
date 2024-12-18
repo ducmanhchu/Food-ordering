@@ -47,6 +47,7 @@ function Login() {
                 setTimeout(() => {
                     sessionStorage.removeItem("path-before-login")
                     navigate(currentPath) // Chuyển hướng về trang trước đó sau 1 giây
+                    window.location.reload()
                 }, 1000)  
           }
         } else throw new Error("Đăng nhập thất bại")

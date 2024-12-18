@@ -5,6 +5,8 @@ import { useState } from 'react'
 import '../components/Custom.css'
 import postsApi from '../api/posts'
 import EditPostModal from './EditPostModal'
+const BASE_URL = "http://127.0.0.1:8000/"; 
+
 
 function Post({ data, onDelete, onUpdate }) {
     const [showEditModal, setShowEditModal] = useState(false)
@@ -21,7 +23,7 @@ function Post({ data, onDelete, onUpdate }) {
     
         return `${day}/${month}/${year}`
     }
-
+    // console.log('image', data.image)
     // Hàm xử lý xóa bài viết
     const handleDelete = async () => {
         const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?');
@@ -67,7 +69,16 @@ function Post({ data, onDelete, onUpdate }) {
                     )}
                 </div>
                 <Link className='text-decoration-none text-black' to={`/posts/${data.id}`}>
-                    <p className="fs-4 fw-medium mb-2">{data.title}</p>
+                <p className="fs-4 fw-medium mb-2">{data.title}</p>
+                    {/* Hiển thị ảnh nếu có */}
+                    {data.image && (
+                        <img 
+                            src={`${BASE_URL}${data.image}`}
+                            alt={data.title} 
+                            className="img-fluid rounded mb-3" 
+                            style={{ maxHeight: '300px', objectFit: 'cover' }} 
+                        />
+                    )}
                     <p className='text-truncate mb-3'>{data.content}</p>
                     <div className='text-secondary' style={{fontSize: '14px'}}>{formatDate(data.created_at)}</div>
                 </Link>

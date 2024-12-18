@@ -15,6 +15,7 @@ import OrderDetail from './pages/OrderDetail'
 import ScrollToTop from './components/ScrollToTop'
 import PostDetail from './pages/PostDetail'
 import MyPosts from './pages/MyPosts'
+import MyComments from './pages/MyComments'
 
 function App() {
   return (
@@ -34,7 +35,7 @@ function App() {
         <Route path='/order-detail/:id' element={<OrderDetail />} />
         <Route path='/posts/:id' element={<PostDetail />} />
         <Route path='/my-posts' element={<MyPosts />} />
-
+        <Route path='/my-comments' element={<MyComments />} />
       </Routes>
 
     </>

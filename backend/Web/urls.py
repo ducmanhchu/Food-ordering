@@ -8,7 +8,7 @@ urlpatterns = [
     path('categories/', get_categories, name='categories'),
     path('products/<int:pk>/', product_detail, name='product_detail'),
     path('user-info/', userInfo, name='user-info'),
-
+    path('update_user/', updateUser, name='update_user'),
     path('categories/create/', create_category, name='create_category'),
     path('categories/<int:pk>/update/', update_category, name='update_category'),
     path('categories/<int:pk>/delete/', delete_category, name='delete_category'),

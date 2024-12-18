@@ -24,6 +24,14 @@ class OrderItemInLine(admin.TabularInline):
 
     def has_delete_permission(self, request, obj=None):
         return False
+    def has_module_permission(self, request):
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+        return False
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_staff:
+            return True
+
 
 class CartItemInLine(admin.TabularInline):
     model = CartItem
@@ -39,6 +47,14 @@ class CartItemInLine(admin.TabularInline):
 
     def has_delete_permission(self, request, obj=None):
         return False
+    
+    def has_module_permission(self, request):
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+        return False
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_staff:
+            return True
 
 class UserAdmin(BaseUserAdmin):
     list_display = ['username', 'role', 'email', 'is_staff', 'is_active', 'is_superuser']
@@ -191,9 +207,13 @@ class OrderAdmin(admin.ModelAdmin):
 
     
     def has_change_permission(self, request, obj=None):
+        try:
+            employee = Employee.objects.get(user = request.user)
+        except:
+            pass
         if request.user.is_superuser:
             return True
-        if obj is not None and obj.employee == request.user:
+        if obj is not None and obj.employee == employee:
             return True
         return False
 

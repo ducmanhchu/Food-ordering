@@ -8,67 +8,57 @@ import '../components/Custom.css'
 import postsApi from "../api/posts";
 
 function Posting() {
-    const [image, setImage] = useState(null);
-    const [title, setTitle] = useState(""); // State cho Tiêu đề
-    const [content, setContent] = useState(""); // State cho Nội dung
-    const [error, setError] = useState(""); // State cho thông báo lỗi
+    const [image, setImage] = useState(null); // Lưu trực tiếp file ảnh
+    const [title, setTitle] = useState("");
+    const [content, setContent] = useState("");
+    const [error, setError] = useState("");
     const navigate = useNavigate(); 
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
-    const [showAlert, setShowAlert] = useState(false)
-    const [showMessage, setShowMessage] = useState(false)   
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
+    const [showMessage, setShowMessage] = useState(false);
 
-    // Kiểm tra xem đã đăng nhập chưa
     useEffect(() => {
-        const accessToken = localStorage.getItem("access_token")
-        setIsLoggedIn(!!accessToken)
-    }, [])
+        const accessToken = localStorage.getItem("access_token");
+        setIsLoggedIn(!!accessToken);
+    }, []);
 
-    // Hàm xử lý khi người dùng chọn ảnh
     const handleImageChange = (event) => {
         const file = event.target.files[0];
         if (file) {
-            setImage(URL.createObjectURL(file)); // Tạo URL cho hình ảnh
+            setImage(file); // Lưu file thay vì URL
         }
     };
 
-    // Hàm xử lý gửi bài viết
-    const handlePosting = async(e) => {
-        e.preventDefault()
+    const handlePosting = async (e) => {
+        e.preventDefault();
         try {
             if (!isLoggedIn) {
-                setShowAlert(true)
+                setShowAlert(true);
             } else {
-                const response = await postsApi.posting(title, content) || []
-                console.log("Res:", response)
+                const response = await postsApi.posting(title, content, image);
                 if (response) {
-                    setShowMessage(true)
+                    setShowMessage(true);
                     setTimeout(() => {
-                        navigate('/blog')
-                    }, 1000)
+                        navigate('/blog');
+                    }, 1000);
                 }
             }
-        } catch(error) {
-            console.log("Loi khi dang bai", error)
+        } catch (error) {
+            console.error("Lỗi khi đăng bài:", error);
             if (error.response) {
-                setError(error.response.data.detail || 'Đăng bài không thành công!')
+                setError(error.response.data.detail || 'Đăng bài không thành công!');
             } else {
-                setError('Có lỗi xảy ra, hãy kiểm tra lại!')
+                setError('Có lỗi xảy ra, hãy kiểm tra lại!');
             }
         }
-    }
+    };
 
     return (
         <>
             <Header />
-
             <Container>
-                <Navbar style={{ paddingLeft: "12px" }}>
-                    <nav
-                        style={{
-                            "--bs-breadcrumb-divider": `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E")`,
-                        }}
-                        aria-label="breadcrumb"
-                    >
+                <Navbar>
+                    <nav>
                         <ol className="breadcrumb">
                             <li className="breadcrumb-item">
                                 <Link to="/" className="link-underline-light text-secondary">Trang chủ</Link>
@@ -80,55 +70,48 @@ function Posting() {
                         </ol>
                     </nav>
                 </Navbar>
-                <h1 style={{ paddingLeft: "12px" }}>Đăng bài</h1>
+                <h1>Đăng bài</h1>
                 <div className="bg-white m-3 rounded p-3">
                     <form onSubmit={handlePosting}>
                         <div className="mb-3">
-                            <label htmlFor="exampleFormControlInput1" className="form-label fw-bold">Tiêu đề bài viết</label>
+                            <label htmlFor="titleInput" className="form-label fw-bold">Tiêu đề bài viết</label>
                             <input
                                 type="text"
                                 className="form-control"
-                                id="exampleFormControlInput1"
+                                id="titleInput"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 required
                             />
                         </div>
-
-                    
-                        <div className="bg-white">
-                            <div className="mb-3">
-                                <label htmlFor="imageUpload" className="form-label">Chọn ảnh</label>
-                                <input
-                                    type="file"
-                                    className="form-control"
-                                    id="imageUpload"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                />
-                            </div>
-                            {image && (
-                                <div className="mt-3">
-                                    <h5>Hình ảnh đã chọn:</h5>
-                                    <img src={image} alt="Selected" className="img-fluid" />
-                                </div>
-                            )}
-                        </div> 
-
                         <div className="mb-3">
-                            <label htmlFor="exampleFormControlTextarea1" className="form-label fw-bold">Nội dung bài viết</label>
+                            <label htmlFor="imageUpload" className="form-label">Chọn ảnh</label>
+                            <input
+                                type="file"
+                                className="form-control"
+                                id="imageUpload"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                            />
+                        </div>
+                        {image && (
+                            <div className="mt-3">
+                                <h5>Hình ảnh đã chọn:</h5>
+                                <img src={URL.createObjectURL(image)} alt="Selected" className="img-fluid" />
+                            </div>
+                        )}
+                        <div className="mb-3">
+                            <label htmlFor="contentTextarea" className="form-label fw-bold">Nội dung bài viết</label>
                             <textarea
                                 className="form-control"
-                                id="exampleFormControlTextarea1"
+                                id="contentTextarea"
                                 rows="3"
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 required
                             />
                         </div>
-
                         {error && <div className="alert alert-danger">{error}</div>}
-
                         <div className="d-grid gap-2 d-md-flex justify-content-md-end">
                             <button
                                 type="submit"
@@ -150,7 +133,6 @@ function Posting() {
                     <Toast.Body>Đăng bài thành công!</Toast.Body>
                 </Toast>    
             </ToastContainer>
-
             <Footer />
         </>
     );
